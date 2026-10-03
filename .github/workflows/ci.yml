@@ -20,5 +20,8 @@ jobs:
       - run: composer install --no-interaction --prefer-dist --optimize-autoloader
       - run: npm ci
       - run: php artisan test
+        env:
+          # Test-only key; never a deployment credential or GitHub secret.
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       - run: vendor/bin/pint --test
       - run: npm run build
