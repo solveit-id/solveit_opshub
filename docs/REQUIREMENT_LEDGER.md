@@ -37,7 +37,7 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | Task | Status | Evidence / remaining boundary |
 |---|---|---|
 | IP-M1-01 | implemented | Scoped registry API and Inertia registry/project pages cover client/contact, project, separate environments, canonical assets, and shared usages. Mutations require `registry.manage`, are audited, reject recognizable secret-bearing values, and keep archive history. `RegistryApiTest` verifies the graph, RBAC, secret rejection, archive queue reconciliation, and rendering (5 tests, 36 assertions). |
-| IP-M1-02 | not_started | Depends on canonical assets from IP-M1-01; hosting/subscription metadata and management-access recording are not exposed yet. |
+| IP-M1-02 | implemented | Scoped hosting account, service subscription, and management-authorization APIs record metadata, source/evidence references, precision semantics, and expiring action scope. No connector, credential value, remote action, job, or outbox event is created. `RegistryMetadataTest` verifies these boundaries (4 tests, 26 assertions). |
 | IP-M1-03 to IP-M1-10 | not_started | Monitoring policy, probes, observations, incidents, operations UI, self-health, and deterministic vertical demo remain outside this checkpoint. |
 
 ## M1 requirement evidence (IP-M1-01 scope)
@@ -49,6 +49,10 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | REG-03 | implemented | passing | live_unverified | Production/staging/development/custom kinds are explicit; a project cannot duplicate a standard environment and asset usage validates the matching project environment. |
 | REG-04 to REG-06 | implemented | passing | live_unverified | Canonical asset kinds, responsibility, owner membership, source, verification timestamp, notes, and shared usage relation exist. No secret value is accepted in notes, identity, or source. |
 | REG-10 | partial | passing | not_required_m0 | Paused/archived project transitions cancel only future queued project/environment work and preserve history; leased/running work is left for reconciliation. Full monitor scheduling and shared-resource run semantics depend on IP-M1-03 and later. |
+| REG-07 | implemented | passing | live_unverified | Hosting metadata requires a canonical hosting asset and records provider, panel, separate HTTPS API endpoint, account identifier, quota, access declarations, and per-environment roots. It does not connect to the provider. |
+| REG-08 | partial | passing | live_unverified | Subscription metadata stores billing/paying/action parties, source/evidence reference, reminder policy, billing due, and mutually exclusive instant/date/unknown expiry precision. Renewal cycle/follow-up/reminder execution remains M2. |
+| REG-09 | partial | passing | live_unverified | Project/hosting scope records allowed action classes, authorizer, evidence reference, and expiry. The authorization service refuses expired or absent classes; future connector/backup write paths must consume it in M3. |
+| CON-08 | partial | passing | not_configured | Metadata may declare `manual_only`/unknown access without offering a connector action. Provider discovery and public-monitoring fallback arrive in M1-04/M3. |
 | SEC-02, SEC-04, SEC-11 | implemented | passing | not_required_m0 | Active organization membership and `registry.manage` gate every mutation; audit records are redacted and input rejects recognizable secret-bearing values. |
 
 ## M0 requirement evidence

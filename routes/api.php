@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FoundationOrganizationController;
 use App\Http\Controllers\RegistryController;
+use App\Http\Controllers\RegistryMetadataController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])
@@ -32,4 +33,11 @@ Route::middleware(['auth', 'active.user', 'organization.access:project.read'])
         Route::delete('/assets/{asset}', [RegistryController::class, 'destroyAsset']);
         Route::post('/assets/{asset}/usages', [RegistryController::class, 'storeAssetUsage']);
         Route::delete('/asset-usages/{usage}', [RegistryController::class, 'destroyAssetUsage']);
+
+        Route::post('/hosting-accounts', [RegistryMetadataController::class, 'storeHostingAccount']);
+        Route::patch('/hosting-accounts/{hostingAccount}', [RegistryMetadataController::class, 'updateHostingAccount']);
+        Route::post('/service-subscriptions', [RegistryMetadataController::class, 'storeServiceSubscription']);
+        Route::patch('/service-subscriptions/{serviceSubscription}', [RegistryMetadataController::class, 'updateServiceSubscription']);
+        Route::post('/management-authorizations', [RegistryMetadataController::class, 'storeManagementAuthorization']);
+        Route::patch('/management-authorizations/{managementAuthorization}', [RegistryMetadataController::class, 'updateManagementAuthorization']);
     });

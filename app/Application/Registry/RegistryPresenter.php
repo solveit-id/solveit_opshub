@@ -24,6 +24,7 @@ class RegistryPresenter
                 ->get(['id', 'client_id', 'code', 'name', 'lifecycle', 'criticality', 'stack_tags', 'internal_pic_user_id', 'notes', 'version']),
             'assets' => Asset::query()
                 ->forOrganization($organization)
+                ->with(['hostingAccount', 'serviceSubscription'])
                 ->withCount('usages')
                 ->orderBy('kind')
                 ->orderBy('canonical_identity')
