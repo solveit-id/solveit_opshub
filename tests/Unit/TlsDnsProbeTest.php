@@ -28,7 +28,7 @@ class TlsDnsProbeTest extends TestCase
     public function test_tls_thresholds_validity_and_peer(): void
     {
         $now = CarbonImmutable::parse('2026-10-04T00:00:00Z');
-        foreach ([31 => 'pass', 30 => 'warning', 7 => 'fail', 0 => 'fail'] as $days => $expected) {
+        foreach ([31 => 'pass', 30 => 'warn', 7 => 'fail', 0 => 'fail'] as $days => $expected) {
             $transport = new class($now->addDays($days)->timestamp) implements TlsTransport
             {
                 public function __construct(private int $expiry) {}

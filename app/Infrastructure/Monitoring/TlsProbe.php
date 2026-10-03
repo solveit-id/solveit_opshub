@@ -25,7 +25,7 @@ class TlsProbe
             $now ??= CarbonImmutable::now('UTC');
             $days = ($certificate['expires_at'] - $now->timestamp) / 86400;
             $valid = $certificate['hostname_valid'] && $certificate['chain_valid'] && $days > 0;
-            $outcome = ! $valid || $days <= ($options['critical_days'] ?? 7) ? 'fail' : ($days <= ($options['warning_days'] ?? 30) ? 'warning' : 'pass');
+            $outcome = ! $valid || $days <= ($options['critical_days'] ?? 7) ? 'fail' : ($days <= ($options['warning_days'] ?? 30) ? 'warn' : 'pass');
 
             return new ProbeResult($outcome, ! $valid ? 'TLS_INVALID' : ($outcome === 'pass' ? 'TLS_OK' : 'TLS_EXPIRING'), [
                 'expires_at' => CarbonImmutable::createFromTimestampUTC($certificate['expires_at'])->toIso8601String(),
