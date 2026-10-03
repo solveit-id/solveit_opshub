@@ -6,7 +6,7 @@
 
 Use Laravel `13.34.0` with PHP `8.5.7`, Inertia Laravel `2.0.28`, React `18.2.0`, TypeScript `5.0.2`, Vite `7.0.7`, and Laravel Breeze `2.4.2`.
 
-Production remains planned for PostgreSQL, Redis, private S3-compatible storage, and a secrets manager. M0 uses SQLite/database queue/array mail only for local and test execution. That fallback is not a production architecture claim.
+MySQL with InnoDB is the only application database for setup, local runtime, all database tests, and CI, following the project owner's correction on 4 Oktober 2026 in [ADR-0005](0005-mysql-primary-database.md). Redis, private S3-compatible storage, and a secrets manager remain production targets. The database queue is a local MySQL fallback for the planned Redis workers; mail uses the local/test adapters already configured.
 
 ## Rationale
 

@@ -168,7 +168,7 @@ return new class extends Migration
             $table->foreignId('evidence_id')->nullable()->constrained('evidences')->nullOnDelete();
             $table->timestamp('valid_until')->nullable();
             $table->timestamps();
-            $table->index(['organization_id', 'resource_type', 'resource_id']);
+            $table->index(['organization_id', 'resource_type', 'resource_id'], 'management_authorizations_scope_index');
         });
 
         Schema::create('secret_references', function (Blueprint $table): void {
@@ -214,7 +214,7 @@ return new class extends Migration
             $table->unsignedBigInteger('resource_id');
             $table->json('overrides')->nullable();
             $table->timestamps();
-            $table->unique(['policy_version_id', 'resource_type', 'resource_id']);
+            $table->unique(['policy_version_id', 'resource_type', 'resource_id'], 'policy_assignments_resource_unique');
         });
 
         Schema::create('job_runs', function (Blueprint $table): void {

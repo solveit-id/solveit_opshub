@@ -10,7 +10,7 @@ Outbound target validation, sensitive-data redaction, idempotency records, and f
 
 ## Consequences
 
-- Redis is a production queue/lock target, while SQLite/database queue is used only to exercise M0 locally.
+- Redis is a production queue/lock target. MySQL/InnoDB holds business records and the transactional outbox; the database queue remains a local MySQL fallback. All database tests and CI also use MySQL, as described in [ADR-0005](0005-mysql-primary-database.md).
 - An outbox event being processed is not a delivered Telegram notification. M2 supplies Telegram delivery state, retries, binding, webhook, and callbacks.
 - SSRF protection rejects non-HTTP(S), unapproved ports, localhost, and private/reserved resolved IPs. Private target exceptions require future explicit Owner-approved isolated-worker support.
 - Secrets are only references in business data. The M0 redactor is defence-in-depth; it does not replace an external production secrets manager.

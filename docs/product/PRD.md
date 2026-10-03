@@ -1181,9 +1181,9 @@ Actor human/system/provider; action; object type/ID; organization; occurred_at; 
 
 ### 22.1 Baseline rekomendasi greenfield
 
-Jika repository baru, gunakan **modular monolith** dengan boundary domain dan asynchronous workers. Rekomendasi praktis sesuai kemampuan tim Solveit: Laravel versi yang masih didukung saat implementasi, React + TypeScript melalui Inertia atau frontend same-origin, PostgreSQL, Redis untuk queue/cache/locks, private S3-compatible storage, dan secrets manager. Versi package/PHP/runtime harus diverifikasi saat coding; dokumen tidak mengunci nomor versi yang belum diuji.
+Jika repository baru, gunakan **modular monolith** dengan boundary domain dan asynchronous workers. Rekomendasi praktis sesuai kemampuan tim Solveit: Laravel versi yang masih didukung saat implementasi, React + TypeScript melalui Inertia atau frontend same-origin, MySQL dengan InnoDB, Redis untuk queue/cache/locks, private S3-compatible storage, dan secrets manager. MySQL adalah pilihan database utama proyek sesuai koreksi pemilik proyek pada 4 Oktober 2026; lihat `docs/adr/0005-mysql-primary-database.md`. Versi package/PHP/runtime harus diverifikasi saat coding; dokumen tidak mengunci nomor versi yang belum diuji.
 
-Pilihan ini adalah default untuk mempercepat implementasi, bukan keharusan memigrasi existing repository. Jika repository sudah memakai stack lain yang layak, agent harus menilai gap dan mempertahankannya kecuali ada alasan teknis terukur. Jangan memperkenalkan microservices, Kubernetes, atau event streaming cluster hanya untuk memenuhi diagram.
+MySQL wajib digunakan untuk seluruh workflow database proyek ini, termasuk setup, runtime, migrasi, pengujian otomatis, dan CI. Untuk komponen stack lainnya, pilihan ini adalah default untuk mempercepat implementasi: jika repository sudah memakai komponen lain yang layak, agent harus menilai gap dan mempertahankannya kecuali ada alasan teknis terukur. Jangan memperkenalkan microservices, Kubernetes, atau event streaming cluster hanya untuk memenuhi diagram.
 
 ### 22.2 Module boundaries
 

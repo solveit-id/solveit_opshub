@@ -1,0 +1,24 @@
+name: solveit-opshub
+
+services:
+  mysql:
+    image: mysql:8.4
+    ports:
+      - "127.0.0.1:${DB_PORT:-3308}:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-solveit_opshub}
+      MYSQL_USER: ${DB_USERNAME:-opshub}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Run composer db:up to prepare local credentials}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run composer db:up to prepare local credentials}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./infra/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--host=127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  mysql_data:

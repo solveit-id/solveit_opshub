@@ -1,58 +1,50 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Solveit OpsHub
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Internal operations hub built with Laravel 13, Inertia, React, and TypeScript. The current implementation checkpoint and remaining scope are recorded in [the requirement ledger](docs/REQUIREMENT_LEDGER.md), with requirements in [the PRD](docs/product/PRD.md) and task order in [the implementation plan](docs/planning/IMPLEMENTATION_PLAN.md).
 
-## About Laravel
+## Database policy
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Every database workflow uses **MySQL 8.4 / InnoDB / utf8mb4**: application runtime, migrations, automated tests, and CI. Only the MySQL relational connection is configured. The application rejects other drivers and MariaDB servers. Redis remains the planned queue/cache/lock service, not an alternative application database. See [ADR-0005](docs/adr/0005-mysql-primary-database.md).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Local setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Install PHP 8.5 with `pdo_mysql`, Composer, Node 22/npm, and Docker with Compose. Start Docker, then run:
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```sh
+composer setup
+composer dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+`composer setup` installs dependencies, prepares the ignored `.env`, starts the project MySQL service, checks the authenticated connection, applies pending runtime migrations, installs frontend dependencies from the lockfile, and builds assets. Empty local application/database secrets are generated; existing `APP_KEY` and credentials are preserved. Credentials must never be committed.
 
-## Contributing
+| Purpose | Host / port | Database | Local account |
+|---|---|---|---|
+| Runtime | `127.0.0.1:3308` | `solveit_opshub` | `opshub` |
+| Tests | `127.0.0.1:3308` | `solveit_opshub_test` | `opshub` |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Docker publishes MySQL on loopback only and stores data in the project's persistent `mysql_data` volume. Initialization grants the local application account access to these two project databases. Port `3308` avoids the XAMPP service on `3306`; set `DB_PORT` in `.env` if a different available local port is needed. Changing credentials in `.env` does not rotate accounts in an already initialized volume.
 
-## Code of Conduct
+```sh
+composer db:up
+composer db:check
+php artisan migrate:status
+composer db:down
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`db:down` stops the Compose service without deleting its data volume. Use normal `php artisan migrate` for pending application migrations. Existing data must be backed up and verified before any separate transfer or destructive schema operation. No operational Owner account or live connector is provisioned by setup.
 
-## Security Vulnerabilities
+## Verification
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```sh
+composer test
+php vendor/bin/pint --test
+composer validate --strict
+```
 
-## License
+`composer test` clears cached configuration, builds frontend assets, then runs the complete suite on MySQL. Build assets before direct `php artisan test` or `php vendor/bin/phpunit` calls because Inertia HTTP tests require the Vite manifest.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+PHPUnit forces `APP_ENV=testing`, `DB_CONNECTION=mysql`, `DB_DATABASE=solveit_opshub_test`, and an empty `DB_URL`. Host, port, and credentials come from the local `.env` or the CI environment. The test base checks the environment, MySQL driver, and a database name ending in `_test` before `RefreshDatabase` can reset tables. Runtime and test schemas remain separate; the test database is disposable.
+
+## CI
+
+[The CI workflow](.github/workflows/ci.yml) provisions a disposable MySQL 8.4 service and `solveit_opshub_test`, installs PHP 8.5 with `pdo_mysql` and Node 22, installs locked dependencies, builds frontend assets, runs the complete MySQL suite, then checks PHP formatting. CI's published passwords and generated application key are runner-only test values. There is no alternate database test path.
