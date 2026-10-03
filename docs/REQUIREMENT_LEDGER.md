@@ -8,6 +8,8 @@
 
 The following evidence was run in this checkout on 4 Oktober 2026 after recovering the incomplete Composer vendor tree: `composer validate --strict`, `php -r "require 'vendor/autoload.php';"`, `vendor/bin/pint --test`, `php artisan test` (**36 passed, 91 assertions**), `php artisan about`, `php artisan migrate:status`, `php artisan route:list --path=api/v1/foundation`, `php artisan schedule:list`, and `npm.cmd run build` (**27.75 seconds**). The generated `public/build/manifest.json` exists. These results validate local development and fakes only; they are not deployment, credential, MFA-provider, or live-connector validation.
 
+**CI dependency repair (4 Oktober 2026):** GitHub Actions failed before application tests because Vite 7 required `@types/node` >=20.19 or >=22.12 while the lockfile resolved Node 18 types. The dependency and lockfile now resolve `@types/node` 22.12.0; local `npm.cmd ci`, `npm.cmd run build`, Pint, and `php artisan test` (**48 passed, 176 assertions**) pass. GitHub Actions rerun remains `live_unverified` until the pushed commit completes remotely.
+
 ## Status legend
 
 | Field | Values | Meaning |
