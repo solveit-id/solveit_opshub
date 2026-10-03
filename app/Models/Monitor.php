@@ -19,7 +19,7 @@ class Monitor extends Model
 
     protected function casts(): array
     {
-        return ['configuration' => 'array', 'enabled' => 'boolean', 'next_due_at' => 'immutable_datetime', 'leased_until' => 'immutable_datetime', 'first_failed_at' => 'immutable_datetime', 'first_recovery_at' => 'immutable_datetime'];
+        return ['configuration' => 'array', 'enabled' => 'boolean', 'next_due_at' => 'immutable_datetime', 'leased_until' => 'immutable_datetime', 'first_failed_at' => 'immutable_datetime', 'first_recovery_at' => 'immutable_datetime', 'last_evaluated_slot' => 'immutable_datetime'];
     }
 
     public function observations(): HasMany

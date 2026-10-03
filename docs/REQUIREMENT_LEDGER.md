@@ -58,7 +58,8 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | IP-M1-04 | implemented | Safe GET probe, DNS/IP pinning, actual-peer check, hop validation, bounded total timeout/body/redirects and opt-in content matching. `HttpProbeTest`: 3 passed, 24 assertions. Native network transport is live-unverified. |
 | IP-M1-05 | implemented | TLS peer/hostname/chain validation and expiry thresholds; DNS A/AAAA/CNAME/MX/NS structured records and optional expected values. `TlsDnsProbeTest`: 2 passed, 27 assertions. TXT unsupported; native TLS/DNS transport live-unverified. |
 | IP-M1-06 | implemented | Append-only scoped observations with UTC chronology, fenced leases, slot uniqueness, provenance, safe evidence allowlist, freshness and capability-aware health. `ObservationTest`: 2 passed, 15 assertions. Daily aggregates and raw-retention preview preserve data; actual destructive retention remains Owner-reviewed/M4. TLS outcome normalized to PRD `warn`. |
-| IP-M1-07 to IP-M1-10 | not_started | Incidents, operations UI, self-health, and vertical demo remain pending. |
+| IP-M1-07 | implemented | Three eligible failures/two passes, unknown streak reset, active episode uniqueness, replay dedup, structured held evidence, UTC failure/recovery times, reopen/new episode linkage and recovery-summary closure gate. Maintenance preserves samples and reevaluates alerts afterward. Four episodes test stability coalescing. `IncidentEngineTest`: 4 passed, 25 assertions. Outbox events are business facts; Telegram delivery/history guard is M2 and not claimed. |
+| IP-M1-08 to IP-M1-10 | not_started | Operations UI, self-health, and vertical demo remain pending. |
 
 ## M1 requirement evidence (IP-M1-01 scope)
 
