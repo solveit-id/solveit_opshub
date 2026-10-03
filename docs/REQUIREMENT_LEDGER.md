@@ -1,6 +1,6 @@
 # M0 Requirement Ledger
 
-**Checkpoint:** M0 foundation implementation  
+**Checkpoint:** M1 registry implementation in progress
 **Source:** `docs/product/PRD.md` v1.0.0; task order in `docs/planning/IMPLEMENTATION_PLAN.md`  
 **Last updated:** 4 Oktober 2026
 
@@ -30,6 +30,27 @@ The following evidence was run in this checkout on 4 Oktober 2026 after recoveri
 | IP-M0-08 | implemented | Deterministic fake adapters with explicit fake provenance; no production fallback. |
 | IP-M0-09 | implemented | Unit/feature test suite, CI workflow, M0 status reporting convention. |
 
+## M1 task checkpoint
+
+M1 is not yet at its exit gate. The following status is limited to the completed first dependency task and does not claim that public monitoring, monitoring policies, incidents, or the M1 vertical demo exist.
+
+| Task | Status | Evidence / remaining boundary |
+|---|---|---|
+| IP-M1-01 | implemented | Scoped registry API and Inertia registry/project pages cover client/contact, project, separate environments, canonical assets, and shared usages. Mutations require `registry.manage`, are audited, reject recognizable secret-bearing values, and keep archive history. `RegistryApiTest` verifies the graph, RBAC, secret rejection, archive queue reconciliation, and rendering (5 tests, 36 assertions). |
+| IP-M1-02 | not_started | Depends on canonical assets from IP-M1-01; hosting/subscription metadata and management-access recording are not exposed yet. |
+| IP-M1-03 to IP-M1-10 | not_started | Monitoring policy, probes, observations, incidents, operations UI, self-health, and deterministic vertical demo remain outside this checkpoint. |
+
+## M1 requirement evidence (IP-M1-01 scope)
+
+| Requirements | Implementation | Test | Live validation | Evidence |
+|---|---|---|---|---|
+| REG-01 | implemented | passing | live_unverified | Client/contact CRUD is organization-scoped; contacts remain business contacts rather than application users. |
+| REG-02 | implemented | passing | live_unverified | Project CRUD validates client scope, unique organization code, stack tags, internal PIC membership, lifecycle, criticality, and notes. |
+| REG-03 | implemented | passing | live_unverified | Production/staging/development/custom kinds are explicit; a project cannot duplicate a standard environment and asset usage validates the matching project environment. |
+| REG-04 to REG-06 | implemented | passing | live_unverified | Canonical asset kinds, responsibility, owner membership, source, verification timestamp, notes, and shared usage relation exist. No secret value is accepted in notes, identity, or source. |
+| REG-10 | partial | passing | not_required_m0 | Paused/archived project transitions cancel only future queued project/environment work and preserve history; leased/running work is left for reconciliation. Full monitor scheduling and shared-resource run semantics depend on IP-M1-03 and later. |
+| SEC-02, SEC-04, SEC-11 | implemented | passing | not_required_m0 | Active organization membership and `registry.manage` gate every mutation; audit records are redacted and input rejects recognizable secret-bearing values. |
+
 ## M0 requirement evidence
 
 | Requirements | Implementation | Test | Live validation | Evidence |
@@ -54,9 +75,9 @@ The following evidence was run in this checkout on 4 Oktober 2026 after recoveri
 | NFR-06, NFR-09 | partial | passing | not_required_m0 | Durable transaction/queue and security negative tests; crash/load evidence is later. |
 | NFR-12 | partial | passing | not_required_m0 | Correlation IDs/audit/outbox fields exist; metrics dashboards are M4. |
 
-## Non-M0 release requirements
+## Non-M0/M1-01 release requirements
 
-All other P0/P1 requirements remain `not_started` with `pending` tests and `not_configured` live validation. Their explicit IDs, planned owner phase, and acceptance evidence remain in the complete matrix at `docs/planning/IMPLEMENTATION_PLAN.md` section 5. They must not be marked complete through M0 schema, fake adapters, or scaffold output.
+All other P0/P1 requirements remain `not_started` with `pending` tests and `not_configured` live validation. Their explicit IDs, planned owner phase, and acceptance evidence remain in the complete matrix at `docs/planning/IMPLEMENTATION_PLAN.md` section 5. They must not be marked complete through foundation schema, registry CRUD, fake adapters, or scaffold output.
 
 ## M0 exit-gate statement
 

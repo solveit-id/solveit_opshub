@@ -10,6 +10,9 @@ export default function Authenticated({
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
+    const organization = usePage().props.organization as
+        | { id: number }
+        | undefined;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -33,6 +36,14 @@ export default function Authenticated({
                                 >
                                     Dashboard
                                 </NavLink>
+                                {organization && (
+                                    <NavLink
+                                        href={route('registry.page', organization.id)}
+                                        active={route().current('registry.*')}
+                                    >
+                                        Registry
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
@@ -137,6 +148,14 @@ export default function Authenticated({
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        {organization && (
+                            <ResponsiveNavLink
+                                href={route('registry.page', organization.id)}
+                                active={route().current('registry.*')}
+                            >
+                                Registry
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">

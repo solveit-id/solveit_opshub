@@ -29,11 +29,19 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $organization = $request->user()?->memberships()
+            ->where('is_active', true)
+            ->with('organization:id,name,timezone,is_active')
+            ->get()
+            ->map(fn ($membership) => $membership->organization)
+            ->first(fn ($candidate) => $candidate?->is_active);
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
             ],
+            'organization' => $organization?->only(['id', 'name', 'timezone']),
         ];
     }
 }

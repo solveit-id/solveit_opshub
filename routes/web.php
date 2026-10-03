@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistryPageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,6 +18,11 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified', 'owner.mfa'])->name('dashboard');
+
+Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:project.read'])->group(function (): void {
+    Route::get('/organizations/{organization}/registry', [RegistryPageController::class, 'index'])->name('registry.page');
+    Route::get('/organizations/{organization}/registry/projects/{project}', [RegistryPageController::class, 'project'])->name('registry.projects.show');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -4,23 +4,20 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Asset extends Model
+class Contact extends Model
 {
     use BelongsToOrganization;
 
     protected $fillable = [
         'organization_id',
-        'kind',
-        'canonical_identity',
-        'responsibility',
-        'owner_user_id',
-        'source',
-        'evidence_id',
+        'client_id',
+        'name',
+        'contact_value',
+        'purpose',
+        'preferred_manual_channel',
         'verified_at',
-        'notes',
-        'version',
     ];
 
     protected function casts(): array
@@ -28,8 +25,8 @@ class Asset extends Model
         return ['verified_at' => 'datetime'];
     }
 
-    public function usages(): HasMany
+    public function client(): BelongsTo
     {
-        return $this->hasMany(AssetUsage::class);
+        return $this->belongsTo(Client::class);
     }
 }
