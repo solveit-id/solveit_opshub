@@ -56,7 +56,8 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | IP-M1-02 | implemented | Scoped hosting account, service subscription, and management-authorization APIs record metadata, source/evidence references, precision semantics, and expiring action scope. No connector, credential value, remote action, job, or outbox event is created. `RegistryMetadataTest` verifies these boundaries (4 tests, 26 assertions). |
 | IP-M1-03 | implemented | Owner-only monitoring policy drafts publish immutable versions. Scoped project assignments record constrained overrides, and an effective-policy preview reports timezone, disabled checks, coverage gaps, and `not_configured` honestly. `MonitoringPolicyTest` verifies version isolation, override limits, coverage, and Owner gate (3 tests, 25 assertions). |
 | IP-M1-04 | implemented | Safe GET probe, DNS/IP pinning, actual-peer check, hop validation, bounded total timeout/body/redirects and opt-in content matching. `HttpProbeTest`: 3 passed, 24 assertions. Native network transport is live-unverified. |
-| IP-M1-05 to IP-M1-10 | not_started | TLS/DNS observations, persistence, incidents, operations UI, self-health, and vertical demo remain pending. |
+| IP-M1-05 | implemented | TLS peer/hostname/chain validation and expiry thresholds; DNS A/AAAA/CNAME/MX/NS structured records and optional expected values. `TlsDnsProbeTest`: 2 passed, 27 assertions. TXT unsupported; native TLS/DNS transport live-unverified. |
+| IP-M1-06 to IP-M1-10 | not_started | Persistence, incidents, operations UI, self-health, and vertical demo remain pending. |
 
 ## M1 requirement evidence (IP-M1-01 scope)
 
