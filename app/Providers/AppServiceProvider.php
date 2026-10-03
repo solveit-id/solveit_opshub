@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Infrastructure\Monitoring\CurlHttpTransport;
+use App\Infrastructure\Monitoring\HttpTransport;
 use App\Infrastructure\Security\HostResolver;
 use App\Infrastructure\Security\NativeHostResolver;
 use Illuminate\Database\Events\ConnectionEstablished;
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(HostResolver::class, NativeHostResolver::class);
+        $this->app->bind(HttpTransport::class, CurlHttpTransport::class);
 
         // Laravel merges its built-in connection templates into project config.
         $this->app['config']->set('database.connections', [

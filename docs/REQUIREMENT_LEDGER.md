@@ -55,7 +55,8 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | IP-M1-01 | implemented | Scoped registry API and Inertia registry/project pages cover client/contact, project, separate environments, canonical assets, and shared usages. Mutations require `registry.manage`, are audited, reject recognizable secret-bearing values, and keep archive history. `RegistryApiTest` verifies the graph, RBAC, secret rejection, archive queue reconciliation, and rendering (5 tests, 36 assertions). |
 | IP-M1-02 | implemented | Scoped hosting account, service subscription, and management-authorization APIs record metadata, source/evidence references, precision semantics, and expiring action scope. No connector, credential value, remote action, job, or outbox event is created. `RegistryMetadataTest` verifies these boundaries (4 tests, 26 assertions). |
 | IP-M1-03 | implemented | Owner-only monitoring policy drafts publish immutable versions. Scoped project assignments record constrained overrides, and an effective-policy preview reports timezone, disabled checks, coverage gaps, and `not_configured` honestly. `MonitoringPolicyTest` verifies version isolation, override limits, coverage, and Owner gate (3 tests, 25 assertions). |
-| IP-M1-04 to IP-M1-10 | not_started | Probes, observations, incidents, operations UI, self-health, and deterministic vertical demo remain outside this checkpoint. |
+| IP-M1-04 | implemented | Safe GET probe, DNS/IP pinning, actual-peer check, hop validation, bounded total timeout/body/redirects and opt-in content matching. `HttpProbeTest`: 3 passed, 24 assertions. Native network transport is live-unverified. |
+| IP-M1-05 to IP-M1-10 | not_started | TLS/DNS observations, persistence, incidents, operations UI, self-health, and vertical demo remain pending. |
 
 ## M1 requirement evidence (IP-M1-01 scope)
 
