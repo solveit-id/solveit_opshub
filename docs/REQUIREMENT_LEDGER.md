@@ -38,7 +38,8 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 |---|---|---|
 | IP-M1-01 | implemented | Scoped registry API and Inertia registry/project pages cover client/contact, project, separate environments, canonical assets, and shared usages. Mutations require `registry.manage`, are audited, reject recognizable secret-bearing values, and keep archive history. `RegistryApiTest` verifies the graph, RBAC, secret rejection, archive queue reconciliation, and rendering (5 tests, 36 assertions). |
 | IP-M1-02 | implemented | Scoped hosting account, service subscription, and management-authorization APIs record metadata, source/evidence references, precision semantics, and expiring action scope. No connector, credential value, remote action, job, or outbox event is created. `RegistryMetadataTest` verifies these boundaries (4 tests, 26 assertions). |
-| IP-M1-03 to IP-M1-10 | not_started | Monitoring policy, probes, observations, incidents, operations UI, self-health, and deterministic vertical demo remain outside this checkpoint. |
+| IP-M1-03 | implemented | Owner-only monitoring policy drafts publish immutable versions. Scoped project assignments record constrained overrides, and an effective-policy preview reports timezone, disabled checks, coverage gaps, and `not_configured` honestly. `MonitoringPolicyTest` verifies version isolation, override limits, coverage, and Owner gate (3 tests, 25 assertions). |
+| IP-M1-04 to IP-M1-10 | not_started | Probes, observations, incidents, operations UI, self-health, and deterministic vertical demo remain outside this checkpoint. |
 
 ## M1 requirement evidence (IP-M1-01 scope)
 
@@ -53,6 +54,8 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | REG-08 | partial | passing | live_unverified | Subscription metadata stores billing/paying/action parties, source/evidence reference, reminder policy, billing due, and mutually exclusive instant/date/unknown expiry precision. Renewal cycle/follow-up/reminder execution remains M2. |
 | REG-09 | partial | passing | live_unverified | Project/hosting scope records allowed action classes, authorizer, evidence reference, and expiry. The authorization service refuses expired or absent classes; future connector/backup write paths must consume it in M3. |
 | CON-08 | partial | passing | not_configured | Metadata may declare `manual_only`/unknown access without offering a connector action. Provider discovery and public-monitoring fallback arrive in M1-04/M3. |
+| POL-01 | implemented | passing | not_required_m0 | Draft configuration is separate from immutable published `PolicyVersion`; active project assignments retain their published version when the draft changes. |
+| POL-03 | implemented | passing | not_required_m0 | Project override may only disable an existing check or lengthen its interval; it cannot add checks, make a faster schedule, or violate the M1 fixed failure/recovery and TLS thresholds. Effective preview includes applied overrides, IANA timezone, coverage, and disabled/not-configured states. |
 | SEC-02, SEC-04, SEC-11 | implemented | passing | not_required_m0 | Active organization membership and `registry.manage` gate every mutation; audit records are redacted and input rejects recognizable secret-bearing values. |
 
 ## M0 requirement evidence

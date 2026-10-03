@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FoundationOrganizationController;
+use App\Http\Controllers\MonitoringPolicyController;
 use App\Http\Controllers\RegistryController;
 use App\Http\Controllers\RegistryMetadataController;
 use Illuminate\Support\Facades\Route;
@@ -40,4 +41,10 @@ Route::middleware(['auth', 'active.user', 'organization.access:project.read'])
         Route::patch('/service-subscriptions/{serviceSubscription}', [RegistryMetadataController::class, 'updateServiceSubscription']);
         Route::post('/management-authorizations', [RegistryMetadataController::class, 'storeManagementAuthorization']);
         Route::patch('/management-authorizations/{managementAuthorization}', [RegistryMetadataController::class, 'updateManagementAuthorization']);
+
+        Route::post('/monitoring-policies', [MonitoringPolicyController::class, 'store']);
+        Route::patch('/monitoring-policies/{policy}', [MonitoringPolicyController::class, 'update']);
+        Route::post('/monitoring-policies/{policy}/publish', [MonitoringPolicyController::class, 'publish']);
+        Route::post('/monitoring-policy-versions/{policyVersion}/assignments', [MonitoringPolicyController::class, 'assign']);
+        Route::get('/projects/{project}/effective-monitoring-policy', [MonitoringPolicyController::class, 'preview']);
     });
