@@ -164,7 +164,7 @@ export default function RegistryIndex({
                             <ul className="divide-y divide-slate-200 border-y border-slate-200 bg-white">
                                 {assets.map((asset) => (
                                     <li className="px-4 py-3" key={asset.id}>
-                                        <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate font-medium text-slate-900">{asset.canonical_identity}</p><p className="mt-0.5 text-xs text-slate-500">{asset.kind} · sumber: {asset.source}</p></div><span className="shrink-0 text-xs tabular-nums text-slate-500">{asset.usages_count} usage</span></div>
+                                        <div className="flex items-start justify-between gap-3"><div className="min-w-0"><Link className="block truncate font-medium text-slate-900 underline" href={route('monitoring.assets.show', [organization.id, asset.id])}>{asset.canonical_identity}</Link><p className="mt-0.5 text-xs text-slate-500">{asset.kind} · sumber: {asset.source}</p></div><span className="shrink-0 text-xs tabular-nums text-slate-500">{asset.usages_count} usage</span></div>
                                     </li>
                                 ))}
                             </ul>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\ActivityEvidence\AuditWriter;
 use App\Application\IdentityAccess\OrganizationAuthorizationService;
+use App\Application\IdentityAccess\ProjectAccess;
 use App\Application\PolicyScheduling\EffectiveMonitoringPolicyService;
 use App\Application\PolicyScheduling\MonitoringPolicyConfiguration;
 use App\Domain\IdentityAccess\Role;
@@ -88,9 +89,10 @@ class MonitoringPolicyController extends Controller
         return response()->json(['data' => $assignment], 201);
     }
 
-    public function preview(Organization $organization, Project $project): JsonResponse
+    public function preview(Request $request, Organization $organization, Project $project): JsonResponse
     {
         $this->within($project, $organization);
+        app(ProjectAccess::class)->requireProject($request->user(), $organization, $project);
 
         return response()->json(['data' => $this->effectivePolicy->preview($organization, $project)]);
     }

@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import MonitoringStatus, { observedTime } from '@/Components/MonitoringStatus';
 
 type Usage = {
     id: number;
@@ -11,8 +12,10 @@ type Usage = {
 export default function RegistryProject({
     organization,
     project,
+    monitoring,
 }: {
     organization: { id: number; name: string };
+    monitoring: { health: string; coverage: string; checks: { id: number; kind: string; state: string; freshness: string; last_observation: { completed_at: string; source_type: string; reason_code: string; fake: boolean } | null }[] };
     project: {
         id: number;
         name: string;
@@ -39,6 +42,7 @@ export default function RegistryProject({
             <Head title={project.name} />
             <div className="mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
                 <section aria-labelledby="asset-usages-heading">
+                    <section className="mb-8 space-y-3" aria-labelledby="monitoring-heading"><h3 id="monitoring-heading" className="font-semibold">Monitoring</h3><MonitoringStatus value={monitoring.health} /><p className="text-sm">Coverage {monitoring.coverage} · Backup belum dikonfigurasi · Internal health tidak didukung.</p>{monitoring.checks.length === 0 ? <p className="bg-amber-50 p-3">Belum ada monitor terkonfigurasi; status website belum diketahui.</p> : monitoring.checks.map(check => <div className="border bg-white p-3" key={check.id}><span className="mr-3 font-semibold uppercase">{check.kind}</span><MonitoringStatus value={check.state} /> <MonitoringStatus value={check.freshness} /><p className="mt-2 text-sm">{observedTime(check.last_observation?.completed_at ?? null)} · {check.last_observation?.source_type ?? 'belum ada sumber'} {check.last_observation?.fake && '· Fixture'} · {check.last_observation?.reason_code}</p></div>)}</section>
                     <div className="border-b border-slate-200 pb-3"><h3 id="asset-usages-heading" className="text-base font-semibold text-slate-900">Usage asset</h3><p className="mt-1 text-sm text-slate-600">Relasi menunjukkan asset mana yang dipakai project dan environment tertentu; tidak ada pewarisan diam-diam antar environment.</p></div>
                     {project.asset_usages.length === 0 ? <p className="mt-4 border-l-4 border-amber-400 bg-amber-50 px-4 py-4 text-sm text-amber-900">Belum ada asset usage. Monitoring, backup, dan authorization belum dapat mengklaim coverage.</p> : (
                         <ul className="mt-4 divide-y divide-slate-200 border-y border-slate-200 bg-white">

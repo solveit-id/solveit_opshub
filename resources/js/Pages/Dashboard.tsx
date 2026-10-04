@@ -24,9 +24,9 @@ export default function Dashboard() {
                             {organization ? (
                                 <Link
                                     className="font-medium text-indigo-700 underline underline-offset-4"
-                                    href={route('registry.page', organization.id)}
+                                    href={route('monitoring.overview', organization.id)}
                                 >
-                                    Buka registry {organization.name}
+                                    Buka overview operasional {organization.name}
                                 </Link>
                             ) : (
                                 'Belum ada organisasi aktif yang dapat ditampilkan.'

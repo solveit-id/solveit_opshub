@@ -19,6 +19,7 @@ enum Role: string
             'organization.read', 'project.read' => true,
             'registry.manage', 'connector.manage', 'monitor.run', 'backup.run' => $this === self::Operator,
             'renewal.manage', 'followup.manage' => $this === self::Operator || $this === self::Operations,
+            'incident.manage' => $this === self::Operator,
             default => false,
         };
     }

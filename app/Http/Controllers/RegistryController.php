@@ -34,9 +34,9 @@ class RegistryController extends Controller
         private readonly RegistryPresenter $presenter,
     ) {}
 
-    public function index(Organization $organization): JsonResponse
+    public function index(Request $request, Organization $organization): JsonResponse
     {
-        return response()->json(['data' => $this->presenter->index($organization)]);
+        return response()->json(['data' => $this->presenter->index($organization, $request->user())]);
     }
 
     public function storeClient(ClientRequest $request, Organization $organization): JsonResponse
