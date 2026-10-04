@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\FoundationOrganizationController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\MonitoringPolicyController;
@@ -10,6 +11,12 @@ use Illuminate\Support\Facades\Route;
 
 // Dashboard APIs share the browser session and enforce CSRF on every mutation.
 Route::middleware('web')->group(function (): void {
+    Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])
+        ->prefix('/v1/organizations/{organization}/client-templates')->group(function (): void {
+            Route::get('/', [ClientTemplateController::class, 'index']);
+            Route::post('/{key}/preview', [ClientTemplateController::class, 'preview'])->where('key', 'TPL-\d{2}');
+            Route::post('/{key}/publish', [ClientTemplateController::class, 'publish'])->where('key', 'TPL-\d{2}');
+        });
     Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])
         ->get('/v1/foundation/organizations/{organization}', [FoundationOrganizationController::class, 'show'])
         ->name('foundation.organizations.show');

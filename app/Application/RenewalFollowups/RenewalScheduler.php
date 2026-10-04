@@ -3,6 +3,7 @@
 namespace App\Application\RenewalFollowups;
 
 use App\Application\ActivityEvidence\AuditWriter;
+use App\Application\ClientTemplates\DraftGenerator;
 use App\Application\TelegramNotifications\OutboxWriter;
 use App\Models\ClientFollowup;
 use App\Models\Evidence;
@@ -136,6 +137,9 @@ class RenewalScheduler
             'action_owner' => $cycle->subscription->action_owner, 'occurred_at' => $now->toIso8601String(), 'route' => $kind === 'escalation' ? 'owner' : 'severity',
         ]);
         $reminder = RenewalReminder::create(['organization_id' => $org->id, 'renewal_cycle_id' => $cycle->id, 'threshold' => $threshold, 'kind' => $kind, 'severity' => $severity, 'state' => 'pending', 'impacted_project_ids' => $ids, 'outbox_event_id' => $event->id, 'occurred_at' => $now]);
+        if (in_array($cycle->subscription->action_owner, ['client', 'shared'], true)) {
+            app(DraftGenerator::class)->generate($org, $followup, now: $now);
+        }
 
         return $reminder->id;
     }

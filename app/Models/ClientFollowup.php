@@ -17,7 +17,7 @@ class ClientFollowup extends Model
 
     protected function casts(): array
     {
-        return ['next_followup_at' => 'immutable_datetime', 'acknowledged_at' => 'immutable_datetime', 'snoozed_until' => 'immutable_datetime'];
+        return ['template_context' => 'array', 'next_followup_at' => 'immutable_datetime', 'acknowledged_at' => 'immutable_datetime', 'snoozed_until' => 'immutable_datetime'];
     }
 
     public function cycle(): BelongsTo

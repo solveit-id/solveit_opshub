@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Application\ClientTemplates\DraftInvalidator;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\StoresUtcDates;
 use Illuminate\Database\Eloquent\Model;
@@ -55,5 +56,10 @@ class ServiceSubscription extends Model
     public function cycles(): HasMany
     {
         return $this->hasMany(RenewalCycle::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::updated(fn (self $service) => app(DraftInvalidator::class)->services([$service->id]));
     }
 }

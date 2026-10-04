@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Application\ClientTemplates\DraftInvalidator;
 use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,5 +33,13 @@ class HostingAccount extends Model
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::updated(function (self $account) {
+            $ids = ServiceSubscription::where('organization_id', $account->organization_id)->where('resource_asset_id', $account->asset_id)->pluck('id')->all();
+            app(DraftInvalidator::class)->services($ids);
+        });
     }
 }
