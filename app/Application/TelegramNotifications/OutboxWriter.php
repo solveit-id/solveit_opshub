@@ -30,7 +30,7 @@ class OutboxWriter
             'aggregate_version' => $aggregateVersion,
             'payload' => $this->redactor->redactArray($payload),
             'status' => 'pending',
-            'available_at' => now(),
+            'available_at' => now('UTC'),
             'correlation_id' => $correlationId,
             'causation_id' => $causationId,
         ]);

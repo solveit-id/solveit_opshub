@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Application\IdentityAccess\OrganizationAuthorizationService;
+use App\Domain\IdentityAccess\Role;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +44,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'organization' => $organization?->only(['id', 'name', 'timezone']),
+            'canConfigureTelegram' => $organization && app(OrganizationAuthorizationService::class)->membership($request->user(), $organization)?->role === Role::Owner,
         ];
     }
 }

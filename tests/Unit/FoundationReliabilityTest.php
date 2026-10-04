@@ -95,7 +95,7 @@ class FoundationReliabilityTest extends TestCase
         app(InitialOwnerService::class)->bootstrap('Second Org', 'Second Owner', 'second-owner@example.test', 'Secret-password-123');
     }
 
-    public function test_outbox_worker_processes_pending_events_without_a_live_connector(): void
+    public function test_notification_intent_stays_pending_without_configuration_or_live_delivery(): void
     {
         $organization = Organization::create(['name' => 'Solveit', 'timezone' => 'Asia/Jakarta']);
         $event = app(OutboxWriter::class)->record($organization, 'telegram.notification.requested', 'notification', 1, 1, ['message' => 'Reminder']);
@@ -104,9 +104,10 @@ class FoundationReliabilityTest extends TestCase
 
         $this->assertDatabaseHas('outbox_events', [
             'id' => $event->id,
-            'status' => 'processed',
-            'attempts' => 1,
+            'status' => 'pending',
+            'attempts' => 0,
         ]);
+        $this->assertDatabaseCount('telegram_deliveries', 0);
     }
 
     public function test_audit_and_payload_redaction_are_append_only(): void

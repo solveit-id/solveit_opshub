@@ -10,6 +10,10 @@ use App\Infrastructure\Monitoring\NativeTlsTransport;
 use App\Infrastructure\Monitoring\TlsTransport;
 use App\Infrastructure\Security\HostResolver;
 use App\Infrastructure\Security\NativeHostResolver;
+use App\Infrastructure\Telegram\EnvironmentTelegramSecrets;
+use App\Infrastructure\Telegram\NativeTelegramTransport;
+use App\Infrastructure\Telegram\TelegramSecretResolver;
+use App\Infrastructure\Telegram\TelegramTransport;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Vite;
@@ -24,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(TelegramSecretResolver::class, EnvironmentTelegramSecrets::class);
+        $this->app->bind(TelegramTransport::class, NativeTelegramTransport::class);
         $this->app->bind(HostResolver::class, NativeHostResolver::class);
         $this->app->bind(TlsTransport::class, NativeTlsTransport::class);
         $this->app->bind(DnsRecordReader::class, NativeDnsRecordReader::class);

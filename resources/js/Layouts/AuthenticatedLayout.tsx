@@ -10,6 +10,7 @@ export default function Authenticated({
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
+    const canConfigureTelegram = usePage().props.canConfigureTelegram === true;
     const organization = usePage().props.organization as
         | { id: number }
         | undefined;
@@ -36,6 +37,7 @@ export default function Authenticated({
                                 >
                                     Dashboard
                                 </NavLink>
+                                {organization && canConfigureTelegram && <NavLink href={route('telegram.settings', organization.id)} active={route().current('telegram.*')}>Telegram</NavLink>}
                                 {organization && (
                                     <NavLink href={route('renewals.index', organization.id)} active={route().current('renewals.*') || route().current('followups.*') || route().current('client-templates.*')}>Renewal</NavLink>
                                 )}
@@ -159,6 +161,7 @@ export default function Authenticated({
                         {organization && (
                             <ResponsiveNavLink href={route('renewals.index', organization.id)} active={route().current('renewals.*') || route().current('followups.*') || route().current('client-templates.*')}>Renewal</ResponsiveNavLink>
                         )}
+                        {organization && canConfigureTelegram && <ResponsiveNavLink href={route('telegram.settings', organization.id)} active={route().current('telegram.*')}>Telegram</ResponsiveNavLink>}
                         {organization && (
                             <ResponsiveNavLink
                                 href={route('registry.page', organization.id)}

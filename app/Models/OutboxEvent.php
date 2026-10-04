@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Concerns\StoresUtcDates;
 use Illuminate\Database\Eloquent\Model;
 
 class OutboxEvent extends Model
 {
     use BelongsToOrganization;
+    use StoresUtcDates;
 
     protected $fillable = [
         'event_id',

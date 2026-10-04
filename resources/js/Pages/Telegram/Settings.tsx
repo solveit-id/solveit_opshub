@@ -1,0 +1,48 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, Link, router } from '@inertiajs/react';
+import axios from 'axios';
+import { FormEvent, useState } from 'react';
+
+type Bot = { version: number; name: string; enabled: boolean; token_secret_reference: string; webhook_secret_reference: string; identity_verified_at: string | null; identity_fake: boolean; settings: { timezone: string; digest_time: string; quiet_start: string; quiet_end: string } };
+type Destination = { id: number; version: number; label: string; chat_id: string; chat_type: string; enabled: boolean; all_projects: boolean; project_ids: number[]; owner_route: boolean; severities: string[]; member_user_id: number | null };
+export default function Settings({ organization, bot, destinations, projects, members, liveEnabled }: { organization: { id: number; name: string }; bot: Bot | null; destinations: Destination[]; projects: { id: number; name: string }[]; members: { id: number; name: string; role: string }[]; liveEnabled: boolean }) {
+    const base = `/api/v1/organizations/${organization.id}/telegram`;
+    const [configuration, setConfiguration] = useState({ name: bot?.name ?? 'Solveit OpsHub', token_secret_reference: bot?.token_secret_reference ?? 'env:OPSHUB_TELEGRAM_BOT_TOKEN', webhook_secret_reference: bot?.webhook_secret_reference ?? 'env:OPSHUB_TELEGRAM_WEBHOOK_SECRET', enabled: bot?.enabled ?? false, timezone: bot?.settings.timezone ?? 'Asia/Jakarta', digest_time: bot?.settings.digest_time ?? '08:00', quiet_start: bot?.settings.quiet_start ?? '22:00', quiet_end: bot?.settings.quiet_end ?? '07:00' });
+    const empty = { id: 0, version: 0, label: '', chat_id: '', chat_type: 'group', enabled: true, all_projects: false, project_ids: [] as number[], owner_route: false, severities: ['critical', 'warning', 'info'], member_user_id: '', scope_confirmed: false };
+    const [destination, setDestination] = useState(empty);
+    const [message, setMessage] = useState('');
+    const [busy, setBusy] = useState(false);
+    const run = async (operation: () => Promise<unknown>) => {
+        setBusy(true); setMessage('');
+        try { await operation(); router.reload(); }
+        catch (error) { setMessage(axios.isAxiosError(error) ? (error.response?.status === 403 ? 'Akses ditolak atau konfirmasi password kedaluwarsa. Konfirmasikan password lalu ulangi.' : error.response?.status === 409 ? 'Versi berubah. Muat ulang sebelum melanjutkan.' : Object.values(error.response?.data.errors ?? {}).flat().join(' ') || error.response?.data.message || 'Permintaan gagal.') : 'Permintaan gagal.'); }
+        finally { setBusy(false); }
+    };
+    const saveBot = (e: FormEvent) => { e.preventDefault(); void run(async () => { await axios.put(`${base}/bot`, { ...configuration, version: bot?.version ?? 0 }); setMessage('Konfigurasi disimpan. Test identity dilakukan terpisah.'); }); };
+    const saveDestination = (e: FormEvent) => { e.preventDefault(); void run(async () => { const data = { ...destination, member_user_id: destination.member_user_id ? Number(destination.member_user_id) : null }; await (destination.id ? axios.patch(`${base}/destinations/${destination.id}`, data) : axios.post(`${base}/destinations`, data)); setDestination(empty); setMessage('Allowlist dan scope destination disimpan.'); }); };
+    const field = 'mt-1 w-full rounded border-gray-300';
+    return <AuthenticatedLayout header={<h1 className="text-xl font-semibold">Telegram · {organization.name}</h1>}><Head title="Telegram" /><main className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+        <p>Owner mengelola allowlist. Pastikan seluruh anggota grup berhak membaca scope yang dipilih. Bot tidak memeriksa keanggotaan pembaca grup.</p>
+        <p>{liveEnabled ? 'Live connector gate aktif; setiap test merupakan tindakan eksplisit.' : 'Live connector dinonaktifkan. Menyimpan konfigurasi tidak mengirim pesan.'} {bot?.identity_fake && 'Identity berasal dari FAKE TESTING.'}</p>
+        <Link className="text-blue-700 underline" href={route('password.confirm')}>Konfirmasikan password sebelum perubahan atau test (10 menit)</Link>
+        {message && <p role="status" className="break-words rounded bg-blue-50 p-3">{message}</p>}
+        <form onSubmit={saveBot} className="space-y-4 rounded bg-white p-4 shadow"><h2 className="font-semibold">Bot dan jadwal</h2>
+            {(['name', 'token_secret_reference', 'webhook_secret_reference', 'timezone', 'digest_time', 'quiet_start', 'quiet_end'] as const).map(key => <label key={key} className="block">{({ name: 'Nama bot', token_secret_reference: 'Reference token (tanpa nilai secret)', webhook_secret_reference: 'Reference webhook secret (tanpa nilai secret)', timezone: 'Timezone IANA', digest_time: 'Digest', quiet_start: 'Quiet hours mulai', quiet_end: 'Quiet hours akhir' })[key]}<input required className={field} type={key.endsWith('time') || key.startsWith('quiet') ? 'time' : 'text'} value={configuration[key]} onChange={e => setConfiguration({ ...configuration, [key]: e.target.value })} /></label>)}
+            <label className="flex gap-2"><input type="checkbox" checked={configuration.enabled} onChange={e => setConfiguration({ ...configuration, enabled: e.target.checked })} />Enable setelah identity diverifikasi</label>
+            <button disabled={busy} className="rounded bg-gray-800 px-4 py-2 text-white">Simpan bot</button>
+            {bot && <button type="button" disabled={busy} className="ml-3 underline" onClick={() => void run(async () => { const response = await axios.post(`${base}/identity`, { version: bot.version }); setMessage(`Identity: ${response.data.data.status} · ${response.data.data.code ?? response.data.data.external_bot_id ?? ''}${response.data.data.fake ? ' · FAKE TESTING' : ''}`); })}>Test identity (getMe)</button>}
+        </form>
+        <section className="rounded bg-white p-4 shadow"><h2 className="font-semibold">Destinations</h2><ul className="divide-y">{destinations.map(d => <li key={d.id} className="flex flex-wrap items-center gap-3 py-3"><span className="min-w-0 break-words">{d.label} · {d.chat_type} · {d.enabled ? 'enabled' : 'disabled'}</span><button className="underline" onClick={() => setDestination({ ...d, member_user_id: d.member_user_id?.toString() ?? '', scope_confirmed: false })}>Edit</button><button disabled={busy} className="underline" onClick={() => void run(async () => { const response = await axios.post(`${base}/destinations/${d.id}/test`, { version: d.version }, { headers: { 'Idempotency-Key': crypto.randomUUID() } }); setMessage(`Test dicatat: outbox #${response.data.data.outbox_event_id} pending. Periksa delivery setelah worker berjalan; belum sent.`); })}>Kirim test eksplisit</button></li>)}</ul></section>
+        {bot && <form onSubmit={saveDestination} className="space-y-4 rounded bg-white p-4 shadow"><h2 className="font-semibold">{destination.id ? 'Edit' : 'Tambah'} destination</h2>
+            <label className="block">Label<input required className={field} value={destination.label} onChange={e => setDestination({ ...destination, label: e.target.value })} /></label>
+            <label className="block">Chat ID<input required className={field} value={destination.chat_id} disabled={!!destination.id} onChange={e => setDestination({ ...destination, chat_id: e.target.value })} /></label>
+            <label className="block">Jenis chat<select className={field} value={destination.chat_type} disabled={!!destination.id} onChange={e => setDestination({ ...destination, chat_type: e.target.value, member_user_id: '' })}>{['private', 'group', 'supergroup'].map(t => <option key={t}>{t}</option>)}</select></label>
+            {destination.chat_type === 'private' && <label className="block">Application member<select required className={field} value={destination.member_user_id} onChange={e => setDestination({ ...destination, member_user_id: e.target.value })}><option value="">Pilih member</option>{members.map(m => <option key={m.id} value={m.id}>{m.name} · {m.role}</option>)}</select></label>}
+            <label className="flex gap-2"><input type="checkbox" checked={destination.all_projects} onChange={e => setDestination({ ...destination, all_projects: e.target.checked })} />Seluruh proyek organisasi</label>
+            {!destination.all_projects && <fieldset><legend>Scope proyek</legend>{projects.map(p => <label key={p.id} className="flex gap-2"><input type="checkbox" checked={destination.project_ids.includes(p.id)} onChange={e => setDestination({ ...destination, project_ids: e.target.checked ? [...destination.project_ids, p.id] : destination.project_ids.filter(id => id !== p.id) })} />{p.name}</label>)}</fieldset>}
+            <fieldset><legend>Severity</legend>{['critical', 'warning', 'info'].map(s => <label key={s} className="mr-3 inline-flex gap-2"><input type="checkbox" checked={destination.severities.includes(s)} onChange={e => setDestination({ ...destination, severities: e.target.checked ? [...destination.severities, s] : destination.severities.filter(v => v !== s) })} />{s}</label>)}</fieldset>
+            {(['owner_route', 'enabled', 'scope_confirmed'] as const).map(key => <label key={key} className="flex gap-2"><input type="checkbox" required={key === 'scope_confirmed'} checked={destination[key]} onChange={e => setDestination({ ...destination, [key]: e.target.checked })} />{({ owner_route: 'Terima eskalasi Owner', enabled: 'Enable destination', scope_confirmed: 'Saya memastikan seluruh anggota chat berhak membaca scope ini' })[key]}</label>)}
+            <button disabled={busy} className="rounded bg-gray-800 px-4 py-2 text-white">Simpan destination</button>
+        </form>}
+    </main></AuthenticatedLayout>;
+}
