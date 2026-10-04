@@ -6,11 +6,13 @@
 
 **Task aktif:** `IP-M1-10` — review exit gate; demo lokal sudah implemented/tested
 
+**Review terbaru:** [lanjutan IP-M1-10](#13-review-lanjutan-ip-m1-10--4-oktober-2026); seluruh pemeriksaan lokal lulus, gate tetap terblokir dependency lintas milestone.
+
 **Sumber keputusan produk:** [PRD](PRD.md)
 
 **Urutan task dan acceptance criteria:** [Implementation Plan](IMPLEMENTATION_PLAN.md)
 
-Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasil validasi, commit/push, blocker, next step, dan runbook monitoring. Hasil pengujian historis tetap disimpan dengan konteksnya; hasil tersebut bukan pemeriksaan ulang pada perubahan dokumentasi ini.
+Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasil validasi, commit/push, blocker, next step, dan runbook monitoring. Hasil pengujian historis tetap disimpan dengan konteksnya; pengujian ulang pada review terbaru dicatat terpisah di bagian 1.3.
 
 ## Daftar isi
 
@@ -35,7 +37,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
 
-### 1.1 Checkpoint terakhir
+### 1.1 Checkpoint implementasi M1 terdahulu
 
 - Active task: **IP-M1-10**, fake demo/concurrency/browser implementation tested; complete milestone exit gate **PARTIAL_WITH_BLOCKERS**.
 - Last result: HTTP/TLS/DNS observations, fenced UTC persistence, incidents/maintenance/stability, scoped workflows, canonical scheduler/durable queue and local self-health implemented. Demo proves one shared monitor, six fake samples, one down/recovery episode and closure without hosting credentials. Browser lifecycle and elapsed stale/unknown state verified.
@@ -56,6 +58,17 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 | TC-07 lengkap | Scheduler/worker stale dan project unknown. | Independent watchdog pada failure domain terpisah M4/M5. | Tentukan sequencing desain dan provisioning watchdog. |
 
 Task berikutnya yang masih aktif adalah **IP-M1-10 — review exit gate**. Tidak ada acceptance waiver. Setelah gate diselesaikan secara eksplisit dan scope lanjutan diotorisasi, kandidat task berikutnya **IP-M2-01**: expiry precision, renewal cycle, dan follow-up state; dependency M0 transactional foundation serta M1 registry/subscription/policy/event facts. Penataan dokumen ini tidak mengubah keputusan tersebut.
+
+### 1.3 Review lanjutan IP-M1-10 — 4 Oktober 2026
+
+- **Baseline:** worktree bersih, `main`/`origin/main` sama pada `a0d0d3775df228b1241fac093b5beb6fedb5fee0`; instruksi root, PRD, plan, matriks TC dan source diperiksa. M1 adalah milestone pertama yang belum selesai. Tidak ada perubahan runtime atau task milestone baru.
+- **Hasil review:** IP-M1-01–09 dan demo IP-M1-10 tetap implemented/tested. [MonitoringVerticalDemoTest](../tests/Feature/MonitoringVerticalDemoTest.php) membuktikan enam sample fake, shared monitor, recovery/closure, stale/unknown dan incident event tetap pending. [IncidentEngine](../app/Application/Monitoring/IncidentEngine.php) menyimpan delivery guard; [RuntimeHealth](../app/Application/Monitoring/RuntimeHealth.php) masih menyatakan notification/watchdog `not_configured`. Metadata subscription serta fake cPanel tidak menyediakan canonical renewal reminder, verified account backup atau scope download. Tidak ditemukan task M1 independen yang belum selesai.
+- **Pengujian aktual pada baseline tersebut:** `composer test` lulus **71 tests / 392 assertions**, suite **97.97s**, TypeScript/Vite build **47.58s**; mencakup demo, race MySQL, SSRF/redirect/peer, TLS escalation, scope, version/idempotency, maintenance dan freshness. PHP **8.5.7**, Node **22.23.1**, MySQL **8.4.11**. `composer db:check`, 11 migration berstatus `Ran`, `php artisan schedule:list`, Pint dan `composer validate --strict` lulus. Guard PHPUnit/TestCase diperiksa sebelum suite: MySQL `solveit_opshub_test`, `APP_ENV=testing`, tanpa `DB_URL`; persistent runtime/volume tidak di-reset.
+- **Status/stop:** `PARTIAL_WITH_BLOCKERS`; full TC-03 (M2 renewal/M3 backup/download), TC-05 (M2 histori delivery destination), TC-07 (M4/M5 independent watchdog) belum terpenuhi. TC-08 credentialed quota dan TC-10 destination delivery tetap memiliki batas phase berikutnya. Tidak ada waiver, perubahan literal exit gate, atau task M2 yang dimulai. Semua pekerjaan yang dapat dilanjutkan dalam M1 sudah teruji; instruksi berhenti ketika seluruh pekerjaan tersisa terblokir diterapkan.
+- **Batas validasi:** browser tidak diulang pada review ini; bukti browser bagian 5.4 tetap historis. Native public probes, provider connectors, Telegram, production Redis/storage/secrets/MFA dan watchdog tidak divalidasi live. Default live gates tetap false; tidak ada secret/config live yang diubah. Hasil suite lokal tidak membuktikan full TC-01–10, remote CI baru, atau kesiapan production.
+- **Integritas/cleanup:** audit dokumentasi lulus 384 pemeriksaan total, termasuk 212 pemeriksaan integritas isi; 52 task dan 6 exit gate literal tetap utuh, 10 dokumen Markdown serta 86 tautan relatif/anchor valid. `git diff --check` lulus; manifest `storage/app/qa-m1-login.json` tidak tersisa setelah suite. Source, lockfiles, `.env`, dependency dan artifact QA/build tidak termasuk perubahan commit.
+- **Commit/push:** review dokumentasi akan di-commit dengan scope eksplisit `docs/CHECKPOINT.md` dan `docs/IMPLEMENTATION_PLAN.md`; receipt hash/push dicatat sesudah verifikasi remote. Tidak ada task implementasi baru yang ditandai selesai.
+- **Next step konkret:** tetap **IP-M1-10** — Owner menetapkan sequencing bukti full TC-03/05/07 agar prerequisite M1 tidak melingkar dengan M2/M3/M4/M5, sambil mempertahankan acceptance produk. Setelah keputusan itu dicatat dan instruksi milestone berikutnya diberikan, **IP-M2-01** membangun expiry precision, renewal cycle dan follow-up state; dependency M0 auth/outbox/security serta M1 registry/subscription/policy/incident events. Blocker saat ini adalah urutan gate, bukan token live yang hilang.
 
 ## 2. Arti status dan standar bukti
 

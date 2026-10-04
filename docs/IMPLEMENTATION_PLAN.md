@@ -40,6 +40,8 @@ Status task di bagian 4 adalah snapshot implementasi, bukan izin mengaktifkan fi
 
 Exit gate M1 tetap meminta semua TC-01–10 lulus. TC-03 mencakup renewal/account backup/download, TC-05 mencakup histori delivery Telegram, dan TC-07 mencakup independent watchdog. Bagian observasi sudah teruji, tetapi bukti lengkap skenario tersebut bergantung pada M2/M3/M4/M5. Catatan ini **tidak mengubah acceptance criteria** atau mengizinkan masuk M2: task aktif tetap IP-M1-10 gate review sampai sequencing diputuskan secara eksplisit. Lihat [matriks TC](CHECKPOINT.md#53-matriks-tc-0110).
 
+Review lanjutan 4 Oktober 2026 mengonfirmasi dependency tersebut dari source; build dan suite lokal lengkap lulus **71 tests / 392 assertions**. Tidak ditemukan pekerjaan M1 independen yang tersisa. Status gate tetap `PARTIAL_WITH_BLOCKERS`; pengembangan berhenti dalam M1 sesuai instruksi, menunggu keputusan sequencing dan instruksi milestone berikutnya. Lihat [checkpoint review](CHECKPOINT.md#13-review-lanjutan-ip-m1-10--4-oktober-2026) untuk evidence, batas live dan next step. Literal acceptance/exit gate di bawah tetap utuh.
+
 ## Daftar isi
 
 1. [Executive summary](#1-executive-summary)
