@@ -4,9 +4,9 @@
 
 **Status milestone terakhir:** M2 — `MILESTONE_READY` untuk gate engineering lokal/fake sesuai ADR-0006; Internal v1 dan integrasi production belum ready.
 
-**Milestone/task aktif:** M3, diotorisasi oleh instruksi lanjutan Owner; `IP-M3-01/02` implemented/tested lokal. Gate M3 belum terpenuhi karena sandbox/storage/restore belum tersedia. [Progres dan evidence M3](#11-progres-m3--connector-dan-verified-backup).
+**Milestone/task aktif:** M3, `IP-M3-01–03` implemented/tested lokal; berikutnya `IP-M3-04`. Gate M3 belum terpenuhi karena sandbox/storage/restore belum tersedia. [Progres dan evidence M3](#11-progres-m3--connector-dan-verified-backup).
 
-**Task terakhir:** `IP-M3-02` — implemented/tested lokal/fake; native cPanel live-unverified, tanpa aktivasi integrasi live.
+**Task terakhir:** `IP-M3-03` — implemented/tested lokal/fake; native cPanel/SFTP live-unverified, tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -37,7 +37,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
 | M2 — Telegram/renewal/client loop | IP-M2-01–09 implemented/tested. | `MILESTONE_READY` lokal/fake; bukan integrasi production. | Tidak ada implementasi M2 tersisa; receipt CI/push di bagian 10. |
-| M3 — Connector dan verified backup | IP-M3-01/02 implemented/tested lokal; M3 diotorisasi Owner. | Belum ready; target sandbox/storage/restore belum tersedia. | IP-M3-03 berikutnya; engineering lokal independen dapat dilanjutkan, gate live/sandbox tetap blocked. |
+| M3 — Connector dan verified backup | IP-M3-01–03 implemented/tested lokal; seluruh pengembangan/test lokal/fake M3 diotorisasi Owner. | Gate belum ready; target sandbox/storage/restore belum tersedia. | IP-M3-04 berikutnya; lanjutkan engineering lokal/fake sesuai dependency. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
 
@@ -703,6 +703,18 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 
 **Referensi protocol:** [UAPI introduction](https://api.docs.cpanel.net/cpanel/introduction), [official token authentication](https://docs.cpanel.net/knowledge-base/security/how-to-use-cpanel-api-tokens/), [quota schema](https://api.docs.cpanel.net/specifications/cpanel.openapi/disk-quotas/quota-get_quota_info). Ini acuan implementasi, bukan bukti provider live.
 
-**Commit/push:** task 02 disiapkan pada `main` → `origin/main`, scope read adapter/worker/rotation/alert/test/docs; hash dan remote/CI receipt dicatat setelah commit/push. Tanpa secret/QA artifact/attribution trailer.
+**Commit/push:** `0dc6638aa10eefe71ef189c74fd20cde5fcd0c02`, `(feat) add guarded cPanel discovery and tested reference rotation`, normal push `main` → `origin/main` berhasil dan exact remote hash diverifikasi. Scoped commit 23 file; tanpa secret/QA artifact/attribution trailer. CI exact [37219916656](https://github.com/solveit-id/solveit_opshub/actions/runs/37219916656) **completed/success**, `head_sha` cocok; hasil CI merupakan bukti exact commit, terpisah dari targeted local tests di atas.
 
 **Next step:** **IP-M3-03**, SFTP read-only adapter dengan fingerprint pinning sebelum auth, root/path/symlink guards dan bounded listing/download. Dependency kontrak/security/canonical scope IP-M3-01/02 tersedia. Sandbox SFTP/fingerprint/root terotorisasi belum tersedia; fake test tidak menggantikan protocol validation gate. Source backup/storage independen/restore drill belum tersedia untuk gate task 05–10; tetap jangan masuk M4.
+
+### IP-M3-03 — SFTP read-only dengan host-key/root guard
+
+**Hasil:** adapter/session API hanya expose handshake/auth/realpath/lstat/non-recursive listing/bounded read/close; tanpa write/delete/shell. Worker binding memakai native factory, bukan fake fallback. Live gate false/console guard berhenti sebelum DNS/secret/network. Native koneksi memakai public-IP validation/pinned socket/actual-peer check, host-key SHA256 dari verified SSH handshake dicocokkan sebelum resolve credential/login; tidak auto-trust. Allowed root harus canonical dan directory; seluruh component lstat/realpath harus tetap di root, symlink ditolak termasuk root. Listing default 1000, maksimum 5000; chunk maksimal 64 KiB, byte/time limit, ukuran/mtime sebelum dan sesudah read serta checksum manifest; partial/changed/path race adalah failure, consumer wajib membuang sink parsial. Path/content tidak masuk normalized evidence. File backup belum diklaim terverifikasi; database/full restore unsupported.
+
+**Pengujian:** `SftpReadAdapterTest` **7 passed / 62 assertions**, 4.07s; fingerprint sebelum auth, native secret resolver tidak dipanggil saat mismatch (mocked library tanpa network), traversal/root/symlink/malicious listing, chunk/checksum, partial/changed file, symlink race sebelum consumer, timeout dan empty file, provenance serta gate false. `ConnectorWorkerTest` **7 passed / 64 assertions**, 48.85s; queued scope/version/lease/idempotency/rotation/cPanel regressions dan SFTP assessments, tanpa uptime observation/incident. Initial worker test salah memakai table `incident_episodes`; schema menunjukkan canonical `incidents`, referensi diperbaiki dan asersi deny dipertahankan. Pint seluruh PHP passed, Composer strict valid; dependency phpseclib **4.0.1**/constant-time encoding **3.1.3** locked, 2 installs/0 existing updates, audit tidak menemukan advisory. Source API library locked diperiksa; [SSH connection](https://phpseclib.com/docs/ssh2/connect) dan [SFTP](https://phpseclib.com/docs/ssh2/sftp) adalah acuan protocol.
+
+**Otorisasi/batas:** automatic approval review sebelumnya menolak patch native M3-03 karena persetujuan tambahan baru M3-02. Owner kemudian secara eksplisit mengotorisasi **seluruh kode dan pengujian lokal/fake dalam M3**; patch diterapkan setelah itu. Dependency sempat dihapus saat scope pending dan dipasang kembali setelah persetujuan, tanpa update package existing; warning uninstall hook tidak menghentikan cleanup. Tidak ada provider I/O, perubahan `.env`, runtime migration atau browser/build/suite penuh baru. Live gates tetap false. Native handshake/permission/read-only credential/jail/server behaviour **live-unverified**; high-level SFTP pre/post checks tidak membuktikan atomic open terhadap server yang berkompromi. Sandbox dengan read-only credential/root terotorisasi tetap wajib; fake tidak membuat validated_sandbox atau mengaktifkan writes.
+
+**Commit/push:** task 03 pada `main` → `origin/main`, scoped adapter/binding/dependency/tests/checkpoint; hash/remote/CI receipt dicatat sesudah commit normal. Tanpa secret/installed dependency/QA artifact/attribution trailer.
+
+**Next step konkret:** **IP-M3-04** — model backup policy, required scopes/schedule/RPO/retention/destination/verification, safe preflight authorization/capacity/capability/account lease/reconcile/kill switch. Dependency M0–M2 dan IP-M3-01–03 tersedia untuk local/fake; capability/provider/storage evidence belum tersedia untuk aktivasi nyata. Gate M3 tetap blocked pada sandbox/storage/restore; jangan masuk M4.

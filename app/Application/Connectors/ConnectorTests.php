@@ -8,6 +8,7 @@ use App\Infrastructure\Connectors\ConnectorAdapter;
 use App\Infrastructure\Connectors\ConnectorConfig;
 use App\Infrastructure\Connectors\ConnectorResult;
 use App\Infrastructure\Connectors\Cpanel\CpanelAdapter;
+use App\Infrastructure\Connectors\Sftp\SftpAdapter;
 use App\Jobs\TestConnector;
 use App\Models\Connector;
 use App\Models\ConnectorTestRun;
@@ -92,7 +93,7 @@ class ConnectorTests
         }
         [$connector, $run, $config, $token] = $claim;
         try {
-            $adapter ??= $connector->kind === 'cpanel' ? app(CpanelAdapter::class) : null;
+            $adapter ??= $connector->kind === 'cpanel' ? app(CpanelAdapter::class) : app(SftpAdapter::class);
             $connection = $adapter?->validateConfig($config) ?? new ConnectorResult('not_configured', 'connection', 'NOT_CONFIGURED');
             $results = $connection->successful() ? $adapter->discoverCapabilities($config) : [];
             if ($run->candidate_reference) {

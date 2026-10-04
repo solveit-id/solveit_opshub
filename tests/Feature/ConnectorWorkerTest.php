@@ -9,6 +9,8 @@ use App\Infrastructure\Connectors\ConnectorConfig;
 use App\Infrastructure\Connectors\Cpanel\CpanelRead;
 use App\Infrastructure\Connectors\Cpanel\CpanelResponse;
 use App\Infrastructure\Connectors\Cpanel\CpanelTransport;
+use App\Infrastructure\Connectors\Sftp\SftpSessionFactory;
+use App\Infrastructure\Testing\MemorySftpSessions;
 use App\Infrastructure\Testing\ScriptedCpanelTransport;
 use App\Jobs\TestConnector;
 use App\Models\Asset;
@@ -28,6 +30,33 @@ use Tests\TestCase;
 class ConnectorWorkerTest extends TestCase
 {
     use RefreshDatabase, RenewalFixture, TelegramFixture;
+
+    public function test_sftp_worker_records_fake_read_evidence_and_host_key_mismatch_without_auth_or_uptime_failure(): void
+    {
+        [$org, $owner, $cpanel] = $this->fixture();
+        $connector = app(ConnectorRegistry::class)->configure($org, $owner, new ConnectorConfig($org->id, $cpanel->hosting_account_id,
+            'sftp', 'sftp://sftp.example', 'demo', 'env:OPSHUB_CONNECTOR_SFTP_TEST', ['/srv/app'], 'SHA256:'.str_repeat('A', 43)));
+        $fake = new MemorySftpSessions(['/srv/app' => ['type' => 2]]);
+        app()->instance(SftpSessionFactory::class, $fake);
+        $service = app(ConnectorTests::class);
+        $run = $service->enqueue($org, $owner, $connector, 1, 'sftp-worker-test-key');
+        $service->execute($run->id);
+        $this->assertSame('completed', $run->fresh()->state);
+        $this->assertTrue($run->fresh()->fake);
+        $this->assertSame('live_unverified', $connector->fresh()->validation_state);
+        $this->assertTrue($connector->fresh()->writes_paused);
+        $this->assertDatabaseHas('connector_assessments', ['connector_id' => $connector->id, 'capability' => 'sftp_read', 'source' => 'fake', 'status' => 'supported']);
+        $this->travel(31)->seconds();
+        $before = $fake->authentications;
+        $fake->pin = 'SHA256:'.str_repeat('B', 43);
+        $run2 = $service->enqueue($org, $owner, $connector, 1, 'sftp-mismatch-test-key');
+        $service->execute($run2->id);
+        $this->assertSame('HOST_KEY_MISMATCH', $run2->fresh()->reason_code);
+        $this->assertTrue($run2->fresh()->fake);
+        $this->assertSame($before, $fake->authentications);
+        $this->assertDatabaseCount('observations', 0);
+        $this->assertDatabaseCount('incidents', 0);
+    }
 
     private function fixture(): array
     {
