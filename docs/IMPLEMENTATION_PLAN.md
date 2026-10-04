@@ -8,7 +8,7 @@
 
 **Evidence/progres aktual:** [CHECKPOINT.md](CHECKPOINT.md)
 
-**Posisi saat ini:** M0/M1 `MILESTONE_READY`; M2 `MILESTONE_READY` lokal/fake; M3 aktif, IP-M3-01 implemented/tested lokal. Gate M3 memerlukan sandbox non-client, storage independen dan restore drill yang belum tersedia; M4/M5 belum dimulai. Full TC lintas milestone/Internal v1 belum terpenuhi.
+**Posisi saat ini:** M0/M1 `MILESTONE_READY`; M2 `MILESTONE_READY` lokal/fake; M3 aktif, IP-M3-01/02 implemented/tested lokal. Gate M3 memerlukan sandbox non-client, storage independen dan restore drill yang belum tersedia; M4/M5 belum dimulai. Full TC lintas milestone/Internal v1 belum terpenuhi.
 
 Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKPOINT menjelaskan apa yang sudah dibangun, bukti pengujian, commit/push, blocker dan panduan operasi. Membaca roadmap tidak mengotorisasi credential creation, integrasi live atau tindakan production. Instruksi user menentukan scope pekerjaan yang sedang diotorisasi.
 
@@ -30,7 +30,7 @@ Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKP
 | [M0 — Foundation](#m0--foundation) | IP-M0-01–09 | Implemented/tested dalam scope fondasi. | `MILESTONE_READY` lokal; batas deployment tetap dicatat. |
 | [M1 — Registry/observation](#m1--registry-and-external-observation) | IP-M1-01–10 | Implemented/tested; gate sesuai scope disetujui Owner. | `MILESTONE_READY` lokal; full TC lintas milestone tetap menjadi kewajiban M2–M5. |
 | [M2 — Telegram/client loop](#m2--telegram-and-client-action-loop) | IP-M2-01–09 | Seluruh task implemented/tested, demo dan gate lokal/fake passed. | `MILESTONE_READY` lokal/fake; production Telegram live-unverified. |
-| [M3 — Connector/backup](#m3--capability-aware-connectors-and-verified-backup) | IP-M3-01–10 | IP-M3-01 implemented/tested lokal; adapter/backup belum selesai. | Sandbox/storage/restore evidence belum tersedia. |
+| [M3 — Connector/backup](#m3--capability-aware-connectors-and-verified-backup) | IP-M3-01–10 | IP-M3-01/02 implemented/tested lokal; SFTP/backup belum selesai. | Sandbox/storage/restore evidence belum tersedia. |
 | [M4 — Audit/resilience](#m4--audit-maintenance-operational-resilience) | IP-M4-01–07 | `not_started` | Belum dievaluasi. |
 | [M5 — Internal pilot](#m5--internal-pilot-and-hardening) | IP-M5-01–07 | `not_started` | Belum dievaluasi. |
 
@@ -376,7 +376,7 @@ Full acceptance scenario PRD 24.1 tetap utuh. Assertion yang belum diimplementas
 
 ### M3 — Capability-aware connectors and verified backup
 
-**Progres aktual:** M3 diotorisasi melalui instruksi lanjutan Owner; IP-M3-01 implemented/tested lokal. Owner mengonfirmasi belum tersedia sandbox cPanel/SFTP, storage independen dan target restore terisolasi. Status gate belum ready; capability fake tidak menjadi supported pada target nyata. [Evidence](CHECKPOINT.md#11-progres-m3--connector-dan-verified-backup).
+**Progres aktual:** M3 diotorisasi melalui instruksi lanjutan Owner; IP-M3-01/02 implemented/tested lokal. Owner secara eksplisit mengotorisasi kode/test fake M3-02 tanpa koneksi provider nyata. Sandbox cPanel/SFTP, storage independen dan target restore terisolasi belum tersedia. Status gate belum ready; capability fake tidak menjadi supported pada target nyata. [Evidence](CHECKPOINT.md#11-progres-m3--connector-dan-verified-backup).
 
 **Goal:** support only proven cPanel/SFTP read and backup paths, preserve coverage gaps, store artifacts independently, verify integrity, and evidence an isolated restore drill.
 
@@ -389,7 +389,7 @@ Full acceptance scenario PRD 24.1 tetap utuh. Assertion yang belum diimplementas
 | Status saat ini | Task (urut menurut ID) | Requirement mapping | Output / acceptance task |
 |---|---|---|---|
 | `implemented/tested` lokal | `IP-M3-01` — Define connector contract and typed capability persistence | CON-01/05/06/08, PRD 5.3/9.2 | Interface for config validation, safe discovery, read observation, supported backup, and reconcile; normalized reason codes/states/evidence/timestamps; `unsupported` is a typed non-success. |
-| `not_started` | `IP-M3-02` — Build cPanel read/discovery adapter | CON-02/05–07/11, SEC-03/04/07 | Official API/token through worker only, TLS verification, no write during discovery, sanitized failure and capability tests; 401/403 pauses writes while public uptime continues; atomic secret-reference rotation procedure. |
+| `implemented/tested` lokal; native live-unverified | `IP-M3-02` — Build cPanel read/discovery adapter | CON-02/05–07/11, SEC-03/04/07 | Official API/token through worker only, TLS verification, no write during discovery, sanitized failure and capability tests; 401/403 pauses writes while public uptime continues; atomic secret-reference rotation procedure. |
 | `not_started` | `IP-M3-03` — Build SFTP read adapter | CON-03/05–08, SEC-07 | Pinned host fingerprint, read-only credentials, allowed roots, canonical relative paths, traversal/symlink escape prevention, bounded listing/download failure reports. |
 | `not_started` | `IP-M3-04` — Model backup policies and safe preflight | BAK-01/02/13/19, REG-09, JOB-03/08, OPS-10 | Required file/DB/full-account scope; RPO/schedule/retention/destination/verification; authorization/capability/source+storage quota/estimate/lock/kill-switch preflight; account lock lease and reconcile-first retry. |
 | `not_started` | `IP-M3-05` — Implement cPanel full-account backup request and source reconciliation | BAK-03/04/17/19, CON-02 | Trigger only a previously tested capability, classify API acceptance as `awaiting_source`, detect artifact stability using only documented provider capability, then retrieve to independent storage. No universal restore. |
@@ -595,8 +595,8 @@ All mock/sandbox data and UI badges must be clearly labelled. A fake adapter mus
 
 1. Periksa `AGENTS.md`, Git/worktree/upstream, [CHECKPOINT](CHECKPOINT.md) dan scope instruksi terakhir.
 2. Pilih task pertama yang belum selesai; gunakan dependency dan exit gate bagian 4. Jangan memulai ulang scaffold atau menghapus implementasi yang valid.
-3. Posisi saat ini: **M3 aktif**, IP-M3-01 implemented/tested lokal; M2 selesai dengan gate lokal/fake ready. Full scenario lintas milestone tetap unfinished pada gate pemilik.
-4. Next step **IP-M3-02**, tujuan/dependency/batas live di CHECKPOINT bagian 11. Kerjakan scope M3 yang independen; jangan masuk M4 sebelum instruksi lanjutan. Gate M3 tetap menunggu target sandbox/storage/restore yang diotorisasi.
+3. Posisi saat ini: **M3 aktif**, IP-M3-01/02 implemented/tested lokal; M2 selesai dengan gate lokal/fake ready. Full scenario lintas milestone tetap unfinished pada gate pemilik.
+4. Next step **IP-M3-03**, tujuan/dependency/batas live di CHECKPOINT bagian 11. Kerjakan scope M3 yang independen; jangan masuk M4 sebelum instruksi lanjutan. Gate M3 tetap menunggu target sandbox/storage/restore yang diotorisasi.
 5. Kerjakan pilihan teknis rutin secara mandiri dalam scope yang diotorisasi; catat actual evidence serta blocker. Missing live credential tidak menghalangi pekerjaan domain/fake test yang independen.
 
 ### 9.2 Checklist awal untuk repository baru (historis M0)

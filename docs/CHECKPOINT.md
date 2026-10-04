@@ -1,12 +1,12 @@
 # Solveit OpsHub — Checkpoint dan Panduan Operasi
 
-**Diperbarui:** 4 Oktober 2026
+**Diperbarui:** 5 Oktober 2026
 
 **Status milestone terakhir:** M2 — `MILESTONE_READY` untuk gate engineering lokal/fake sesuai ADR-0006; Internal v1 dan integrasi production belum ready.
 
-**Milestone/task aktif:** M3, diotorisasi oleh instruksi lanjutan Owner; `IP-M3-01` implemented/tested lokal. Gate M3 belum terpenuhi karena sandbox/storage/restore belum tersedia. [Progres dan evidence M3](#11-progres-m3--connector-dan-verified-backup).
+**Milestone/task aktif:** M3, diotorisasi oleh instruksi lanjutan Owner; `IP-M3-01/02` implemented/tested lokal. Gate M3 belum terpenuhi karena sandbox/storage/restore belum tersedia. [Progres dan evidence M3](#11-progres-m3--connector-dan-verified-backup).
 
-**Task terakhir:** `IP-M3-01` — implemented/tested lokal; tanpa aktivasi integrasi live.
+**Task terakhir:** `IP-M3-02` — implemented/tested lokal/fake; native cPanel live-unverified, tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -37,7 +37,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
 | M2 — Telegram/renewal/client loop | IP-M2-01–09 implemented/tested. | `MILESTONE_READY` lokal/fake; bukan integrasi production. | Tidak ada implementasi M2 tersisa; receipt CI/push di bagian 10. |
-| M3 — Connector dan verified backup | IP-M3-01 implemented/tested lokal; M3 diotorisasi Owner. | Belum ready; target sandbox/storage/restore belum tersedia. | IP-M3-02 berikutnya; engineering lokal independen dapat dilanjutkan, gate live/sandbox tetap blocked. |
+| M3 — Connector dan verified backup | IP-M3-01/02 implemented/tested lokal; M3 diotorisasi Owner. | Belum ready; target sandbox/storage/restore belum tersedia. | IP-M3-03 berikutnya; engineering lokal independen dapat dilanjutkan, gate live/sandbox tetap blocked. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
 
@@ -685,6 +685,24 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 
 **Pengujian:** `ConnectorContractTest|FoundationReliabilityTest|RegistryMetadataTest` **18 passed / 118 assertions**, 28.93s; full `php artisan test` **138 passed / 1210 assertions**, 256.28s termasuk dua race MySQL existing. Pint seluruh PHP passed, Composer strict valid; validator docs **52 task outputs / 6 exit gates / 6 acceptance blocks / 11 Markdown / 97 links-anchor**, PRD unchanged. Initial targeted run menemukan shared legacy DTO Telegram dan organization instance yang belum refresh DB default; dipisahkan DTO fixture serta refresh organization, kemudian regression pass tanpa mengurangi asersi. MySQL runtime check **8.4.11 / solveit_opshub** passed; tests memakai guard MySQL `_test`. Tidak ada runtime migration, browser, build frontend baru, provider request atau target sandbox yang diklaim pada task ini.
 
-**Commit/push:** commit task disiapkan pada `main` → `origin/main`; exact hash/receipt diisi setelah commit/push. Preflight HEAD lokal/remote `9c6a65832fd927f6e4311c9b0c39b5df68324c72`, working tree awal bersih. Perubahan hanya kontrak/persistence/API/test/docs terkait; tidak ada secret, dependency installed, QA artifact atau attribution trailer.
+**Commit/push:** `87fded9945eee1b3c570d58c62ea5f07d7ca085b`, `(feat) persist typed scoped connector capability assessments`, normal push `main` → `origin/main` berhasil, exact remote hash dan working tree bersih diverifikasi. CI exact [37218281699](https://github.com/solveit-id/solveit_opshub/actions/runs/37218281699) **completed/success**, `head_sha` cocok. Preflight HEAD lokal/remote `9c6a65832fd927f6e4311c9b0c39b5df68324c72`, working tree awal bersih. Scoped commit 24 file; tidak ada secret, dependency installed, QA artifact atau attribution trailer.
 
 **Next step:** **IP-M3-02**, adapter cPanel read/discovery melalui worker, TLS/SSRF guard, sanitized failure dan test-then-switch reference rotation; dependency IP-M3-01 dan security/canonical account M0–M2 tersedia. Sandbox provider/token/capability evidence belum tersedia, sehingga native protocol tetap live-unverified dan gate M3 blocked. IP-M3-03 merupakan jalur read SFTP independen; backup source/independent-storage/restore tetap mengikuti dependency dan tidak ditandai selesai dari fake.
+
+### IP-M3-02 — cPanel read/discovery dan atomic reference rotation
+
+**Hasil:** adapter UAPI read-only memakai allowlist `Features/list_features` dan `Quota/get_quota_info`, worker-only secret resolution, HTTPS/TLS chain+hostname verification, IP pinning/actual-peer guard, proxy/redirect disabled, batas total 10s/read, body 1 MiB/header 64 KiB. Port cPanel 443/2083 tidak memperluas global public-probe ports. Provider error/body dibuang dari normalized evidence; quota null/unlimited/zero tidak menjadi percentage palsu. Full backup trigger/retrieval masih unknown; full restore/database backup unsupported, tanpa write selama discovery.
+
+**Workflow:** POST `/api/v1/organizations/{organization}/connectors/{connector}/test`, candidate reference opsional untuk rotation; session/CSRF/recent step-up/account-scope/explicit connector permission/idempotency/version/cooldown. Run dan job database atomik; satu active run/account connector, lease fencing, worker recheck actor/org/all-project scope dan authorization observe, retry lease hanya explicit replay dengan cap tiga. Candidate yang gagal/denied tidak mengubah active reference atau history; berhasil → switch/version/audit, lalu operator wajib revoke reference lama melalui provider. Writes tetap paused; fake tidak menjadi validated_sandbox. 401/403 menghasilkan connector auth issue + internal notification intent melalui consumer/destination guard M2; tidak membuat uptime observation/website incident. Delivery belum diklaim sent.
+
+**Evidence lokal:** `CpanelReadAdapterTest` **5 passed / 70 assertions**, 1.62s; first regression contract/worker/delivery **22 passed / 261 assertions**, 44.08s; final `ConnectorWorkerTest` sesudah penambahan lease cap **6 passed / 54 assertions**, 46.93s. Connector contract dan 12 reconciliation cases juga passed dalam targeted run; satu tambahan lease fixture sempat gagal karena stale Eloquent instance, lalu diperbaiki dengan refresh, tanpa perubahan asersi. Pint seluruh PHP, Composer strict dan diff check passed. Tidak ada suite penuh/build/browser baru pada task 02; full task 01 tetap evidence source sebelumnya, bukan exact final task 02.
+
+**Runtime/batas live:** read-only preflight MySQL `solveit_opshub`, users/org/account/outbox/jobs 0, kedua live gates false. Dua migration connector applied normal, `composer db:check` MySQL 8.4.11 passed dan counts/gates tidak berubah. Tidak ada runtime reset, connector/Telegram provider request atau perubahan `.env`; native cPanel **live-unverified**. Resolver env hanya untuk development; production membutuhkan binding secrets manager (M5), tidak fallback env atau fake. Sandbox capability/native TLS/peer/quota evidence tetap requirement gate M3.
+
+**Otorisasi/review:** automatic approval review sempat menolak kode queued-test/worker/rotation karena tidak ada target diotorisasi. Owner kemudian secara eksplisit mengotorisasi pengembangan/test lokal/fake M3-02 dengan live gates false dan tanpa I/O provider nyata; patch baru diterapkan sesudah persetujuan itu. Usulan perubahan AGENTS stop snapshot ditolak dan tidak diterapkan; instruksi sesi menentukan scope M3, gate/PRD tetap utuh. Terminal PowerShell mengalami helper/Access denied; cmd.exe memulihkan execution, tanpa perubahan permission/global config.
+
+**Referensi protocol:** [UAPI introduction](https://api.docs.cpanel.net/cpanel/introduction), [official token authentication](https://docs.cpanel.net/knowledge-base/security/how-to-use-cpanel-api-tokens/), [quota schema](https://api.docs.cpanel.net/specifications/cpanel.openapi/disk-quotas/quota-get_quota_info). Ini acuan implementasi, bukan bukti provider live.
+
+**Commit/push:** task 02 disiapkan pada `main` → `origin/main`, scope read adapter/worker/rotation/alert/test/docs; hash dan remote/CI receipt dicatat setelah commit/push. Tanpa secret/QA artifact/attribution trailer.
+
+**Next step:** **IP-M3-03**, SFTP read-only adapter dengan fingerprint pinning sebelum auth, root/path/symlink guards dan bounded listing/download. Dependency kontrak/security/canonical scope IP-M3-01/02 tersedia. Sandbox SFTP/fingerprint/root terotorisasi belum tersedia; fake test tidak menggantikan protocol validation gate. Source backup/storage independen/restore drill belum tersedia untuk gate task 05–10; tetap jangan masuk M4.

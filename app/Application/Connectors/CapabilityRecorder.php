@@ -6,6 +6,7 @@ use App\Application\TelegramNotifications\OutboxWriter;
 use App\Infrastructure\Connectors\ConnectorResult;
 use App\Models\Connector;
 use App\Models\ConnectorAssessment;
+use App\Models\HostingAccount;
 use App\Models\Organization;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -35,7 +36,7 @@ class CapabilityRecorder
                     in_array($result->reasonCode, ['AUTH_FAILED', 'PERMISSION_DENIED'], true) => 'auth_failed',
                     $result->capability === 'connection' && $result->successful() => 'connected',
                     $result->status === 'not_configured' => 'not_configured',
-                    $result->status === 'fail' || $result->status === 'unknown' => 'degraded',
+                    in_array($result->status, ['fail', 'unknown'], true) && in_array($result->capability, ['connection', 'account_disk_read', 'sftp_read'], true) => 'degraded',
                     default => $connector->state,
                 };
                 $connector->last_tested_at = $result->observedAt;
@@ -44,7 +45,9 @@ class CapabilityRecorder
                 $connector->save();
                 if (in_array($connector->state, ['auth_failed', 'degraded'], true) && $before !== $connector->state) {
                     app(OutboxWriter::class)->record(Organization::findOrFail($connector->organization_id), 'connector.failed', 'connector', $connector->id,
-                        $assessment->id, ['connector_id' => $connector->id, 'reason_code' => $result->reasonCode, 'assessment_id' => $assessment->id]);
+                        $assessment->id, ['connector_id' => $connector->id, 'reason_code' => $result->reasonCode, 'assessment_id' => $assessment->id,
+                            'severity' => 'warning', 'route' => 'owner',
+                            'impacted_project_ids' => HostingAccount::findOrFail($connector->hosting_account_id)->asset->usages()->pluck('project_id')->unique()->values()->all()]);
                 }
             }
 

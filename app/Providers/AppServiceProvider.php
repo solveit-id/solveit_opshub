@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Infrastructure\Connectors\ConnectorSecretResolver;
+use App\Infrastructure\Connectors\Cpanel\CpanelTransport;
+use App\Infrastructure\Connectors\Cpanel\NativeCpanelTransport;
+use App\Infrastructure\Connectors\EnvironmentConnectorSecrets;
 use App\Infrastructure\Monitoring\CurlHttpTransport;
 use App\Infrastructure\Monitoring\DnsRecordReader;
 use App\Infrastructure\Monitoring\HttpTransport;
@@ -28,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(ConnectorSecretResolver::class, EnvironmentConnectorSecrets::class);
+        $this->app->bind(CpanelTransport::class, NativeCpanelTransport::class);
         $this->app->bind(TelegramSecretResolver::class, EnvironmentTelegramSecrets::class);
         $this->app->bind(TelegramTransport::class, NativeTelegramTransport::class);
         $this->app->bind(HostResolver::class, NativeHostResolver::class);

@@ -24,6 +24,7 @@ Route::middleware('web')->group(function (): void {
         ->prefix('/v1/organizations/{organization}/connectors')->group(function (): void {
             Route::get('/{connector}', [ConnectorController::class, 'show']);
             Route::post('/', [ConnectorController::class, 'configure'])->middleware('step-up');
+            Route::post('/{connector}/test', [ConnectorController::class, 'test'])->middleware('step-up');
         });
     Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])->prefix('/v1/organizations/{organization}/notifications')->group(function (): void {
         Route::get('/', [NotificationController::class, 'index']);
