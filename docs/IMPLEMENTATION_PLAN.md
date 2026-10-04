@@ -8,7 +8,7 @@
 
 **Evidence/progres aktual:** [CHECKPOINT.md](CHECKPOINT.md)
 
-**Posisi saat ini:** M0 dan M1 `MILESTONE_READY`; M2 aktif, IP-M2-01 implemented/tested dan IP-M2-02 berikutnya; M3–M5 belum dimulai. Full TC lintas milestone dan gate Internal v1 tetap belum terpenuhi.
+**Posisi saat ini:** M0 dan M1 `MILESTONE_READY`; M2 aktif, IP-M2-01?02 implemented/tested dan IP-M2-04 berikutnya (dependency draft untuk 03); M3–M5 belum dimulai. Full TC lintas milestone dan gate Internal v1 tetap belum terpenuhi.
 
 Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKPOINT menjelaskan apa yang sudah dibangun, bukti pengujian, commit/push, blocker dan panduan operasi. Membaca roadmap tidak mengotorisasi credential creation, integrasi live atau tindakan production. Instruksi user menentukan scope pekerjaan yang sedang diotorisasi.
 
@@ -29,7 +29,7 @@ Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKP
 |---|---|---|---|
 | [M0 — Foundation](#m0--foundation) | IP-M0-01–09 | Implemented/tested dalam scope fondasi. | `MILESTONE_READY` lokal; batas deployment tetap dicatat. |
 | [M1 — Registry/observation](#m1--registry-and-external-observation) | IP-M1-01–10 | Implemented/tested; gate sesuai scope disetujui Owner. | `MILESTONE_READY` lokal; full TC lintas milestone tetap menjadi kewajiban M2–M5. |
-| [M2 — Telegram/client loop](#m2--telegram-and-client-action-loop) | IP-M2-01–09 | 01 implemented/tested; 02–09 belum selesai. | `PARTIAL_WITH_BLOCKERS`: workflow/template/delivery/demo belum tersedia. |
+| [M2 — Telegram/client loop](#m2--telegram-and-client-action-loop) | IP-M2-01–09 | 01 implemented/tested; 02–09 belum selesai. | `PARTIAL_WITH_BLOCKERS`: workflow/template/delivery/demo belum lengkap. |
 | [M3 — Connector/backup](#m3--capability-aware-connectors-and-verified-backup) | IP-M3-01–10 | `not_started` | Belum dievaluasi. |
 | [M4 — Audit/resilience](#m4--audit-maintenance-operational-resilience) | IP-M4-01–07 | `not_started` | Belum dievaluasi. |
 | [M5 — Internal pilot](#m5--internal-pilot-and-hardening) | IP-M5-01–07 | `not_started` | Belum dievaluasi. |
@@ -351,7 +351,7 @@ Full acceptance scenario PRD 24.1 tetap utuh. Assertion yang belum diimplementas
 | Status saat ini | Task (urut menurut ID) | Requirement mapping | Output / acceptance task |
 |---|---|---|---|
 | `implemented/tested` | `IP-M2-01` — Model service subscription, expiry precision, renewal cycle, and follow-up state | REN-01/06/09/10/13, REG-08, PRD 11 | Separate expiry from billing due/payment status; preserve source time zone/date precision; unique active cycle; append-only contact attempts; derived overdue; optimistic concurrency. |
-| `not_started` | `IP-M2-02` — Implement renewal threshold scheduler and idempotent escalation | REN-02–04/11/12, JOB-01/06/09 | H-60/30/14/7/3/1/0 in service timezone; late first entry sends only highest applicable threshold; shared resource one reminder with impacted scoped projects; reasoned bounded snooze/pause. |
+| `implemented/tested` | `IP-M2-02` — Implement renewal threshold scheduler and idempotent escalation | REN-02–04/11/12, JOB-01/06/09 | H-60/30/14/7/3/1/0 in service timezone; late first entry sends only highest applicable threshold; shared resource one reminder with impacted scoped projects; reasoned bounded snooze/pause. |
 | `not_started` | `IP-M2-03` — Implement follow-up workflow and resolution verification | REN-05–10/12/13, UX-05 | One primary follow-up/cycle; assignee, next follow-up, waiting/overdue, response, blocker, commitment; contact recording distinct from copy; verified renewal requires later future expiry plus evidence and cancels old-cycle reminders. |
 | `not_started` | `IP-M2-04` — Seed and govern all ten client templates | TPL-11–17, SEC-11 | Versioned TPL-01…TPL-10; allowed-variable schema, conditional clauses, validation/publish/preview; deterministic plaintext renderer; stale/superseded/blocked/ready draft states; immutable historic sent body. |
 | `not_started` | `IP-M2-05` — Deliver follow-up/template dashboard interactions | REN-07/08, TPL-14–16, UX-05 | Current draft generation, blocked reason/link, clear Copy feedback, explicit Mark contacted form, client-confirmed/verified resolution screens, and no client delivery claim. |
@@ -595,8 +595,8 @@ All mock/sandbox data and UI badges must be clearly labelled. A fake adapter mus
 
 1. Periksa `AGENTS.md`, Git/worktree/upstream, [CHECKPOINT](CHECKPOINT.md) dan scope instruksi terakhir.
 2. Pilih task pertama yang belum selesai; gunakan dependency dan exit gate bagian 4. Jangan memulai ulang scaffold atau menghapus implementasi yang valid.
-3. Posisi saat ini: **M2 aktif**, IP-M2-01 implemented/tested sesudah instruksi lanjutan Owner. M1 tetap ready sesuai ADR-0006; full scenario lintas milestone tetap unfinished pada gate pemilik.
-4. Task berikutnya **IP-M2-02**: threshold/calendar scheduler, shared reminder dan bounded snooze/escalation; dependency IP-M2-01/M0 tersedia. Configuration/live evidence Telegram tetap terpisah. Berhenti setelah gate M2 terpenuhi atau seluruh pekerjaan tersisa terblokir; jangan masuk M3 tanpa instruksi lanjutan.
+3. Posisi saat ini: **M2 aktif**, IP-M2-01?02 implemented/tested sesudah instruksi lanjutan Owner. M1 tetap ready sesuai ADR-0006; full scenario lintas milestone tetap unfinished pada gate pemilik.
+4. Task berikutnya **IP-M2-04**: versioned templates/current validated draft sebagai dependency contact workflow IP-M2-03; 01/02/M0 tersedia. Kembali ke 03 setelah 04, lalu 05?09. Configuration/live evidence Telegram tetap terpisah. Berhenti setelah gate M2 terpenuhi atau seluruh pekerjaan tersisa terblokir; jangan masuk M3 tanpa instruksi lanjutan.
 5. Kerjakan pilihan teknis rutin secara mandiri dalam scope yang diotorisasi; catat actual evidence serta blocker. Missing live credential tidak menghalangi pekerjaan domain/fake test yang independen.
 
 ### 9.2 Checklist awal untuk repository baru (historis M0)
