@@ -1,6 +1,6 @@
 # Solveit OpsHub
 
-Internal operations hub built with Laravel 13, Inertia, React, and TypeScript. The current implementation checkpoint and remaining scope are recorded in [the requirement ledger](docs/REQUIREMENT_LEDGER.md), with requirements in [the PRD](docs/product/PRD.md) and task order in [the implementation plan](docs/planning/IMPLEMENTATION_PLAN.md).
+Internal operations hub built with Laravel 13, Inertia, React, and TypeScript. The current implementation checkpoint and remaining scope are recorded in [the checkpoint and operations guide](docs/CHECKPOINT.md), with requirements in [the PRD](docs/PRD.md) and task order in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ## Database policy
 
