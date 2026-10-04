@@ -26,6 +26,6 @@ class ScriptedTelegramTransport implements TelegramTransport
             return new TelegramResult($r->outcome, $r->code, $r->httpStatus, $r->messageId, $r->botId, $r->retryAfter, true);
         }
 
-        return $method === 'getMe' ? new TelegramResult('accepted', 'BOT_VERIFIED', 200, botId: '1000000', fake: true) : new TelegramResult('sent', 'ACCEPTED', 200, messageId: 'fake-'.count($this->calls), fake: true);
+        return $method === 'getMe' ? new TelegramResult('accepted', 'BOT_VERIFIED', 200, botId: '1000000', fake: true) : ($method === 'sendMessage' ? new TelegramResult('sent', 'ACCEPTED', 200, messageId: 'fake-'.count($this->calls), fake: true) : new TelegramResult('accepted', 'ACCEPTED', 200, fake: true));
     }
 }

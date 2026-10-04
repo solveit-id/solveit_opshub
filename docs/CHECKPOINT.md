@@ -4,9 +4,9 @@
 
 **Status milestone terakhir:** M1 — `MILESTONE_READY` dalam scope engineering lokal yang disetujui Owner; Internal v1 belum ready.
 
-**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-07` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
+**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-08` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
 
-**Task terakhir:** `IP-M2-06` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
+**Task terakhir:** `IP-M2-07` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -35,7 +35,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 |---|---|---|---|
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
-| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 03, 04, 05, 06 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-07; dependency dan bukti di bagian 10. |
+| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 03, 04, 05, 06, 07 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-08; dependency dan bukti di bagian 10. |
 | M3 — Connector dan verified backup | Belum dimulai. | Belum dievaluasi. | Dependency canonical account, authorization, notification dan sandbox. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
@@ -502,7 +502,7 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 | IP-M2-04 | implemented/tested | Sepuluh versioned templates, mandatory-variable validation dan deterministic drafts. |
 | IP-M2-05 | implemented/tested | Dashboard Copy/Mark contacted/current draft/verified resolution. |
 | IP-M2-06 | implemented/tested | Telegram config/destination/outbox/domain/renderer. |
-| IP-M2-07 | not_started | Binding/webhook/commands/constrained callbacks. |
+| IP-M2-07 | implemented/tested | Binding/webhook/commands/constrained callbacks. |
 | IP-M2-08 | not_started | Delivery/history guard/retries/digest/degradation. |
 | IP-M2-09 | not_started | Full demo/TC-11–25/38 plus allocated TC-03/05/10 assertions dan exit gate. |
 
@@ -588,3 +588,18 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 **Commit/push:** scoped task commit + normal push after review; exact receipt recorded next task. IP-M2-05 `43f265cb324e23c43ce5c98be05fb0aca2f9dc4a` already pushed and remote exact verified.
 
 **Next step:** **IP-M2-07** — one-time 10-minute private binding plus authenticated same-user dashboard confirmation, secret-header durable webhook receipts/dedup async processing, scoped commands and opaque constrained callback actions with state/permission/replay checks. Dependency M0/session/identity/outbox and IP-M2-06 available; no live credential required for isolated fake tests. Then 08 reconciliation and 09 full demo/gate; no M3 work.
+
+
+### IP-M2-07 — Private binding, durable webhook dan constrained callbacks
+
+**Hasil:** authenticated/step-up binding intent memakai random 48-byte-hex command, hash-only persistence dan TTL 10 menit; `/start` hanya menerima private numeric user/chat identity yang sama. Candidate tidak aktif sebelum same OpsHub user mengonfirmasi ulang ID + checkbox di dashboard. Intent one-time/cancelled/expired, binding unik per bot/user/Telegram ID, personal revoke dan token identity rotation invalidation. Username tidak menjadi otoritas. Owner mempunyai explicit HTTPS setWebhook dengan secret reference, no drop-pending, dan live gate default false.
+
+**Receiver/actions:** secret-header constant-time verification, bounded JSON/schema, durable unique bot/update-ID receipt + database queue insertion dalam transaksi sebelum 200, normalized/encrypted payload tanpa username/raw arbitrary text/raw start token. Async processing locked/dedup, current bot identity/member/project permissions; only acknowledge/claim/current-template callback, opaque reference 48 bytes dengan hashed scope/version/1-hour expiry dan single-use replay recheck. Contacted/verified/approval/remote changes tetap dashboard. `/start`/`help` generic; `/today`, `/incidents`, `/template <followup_ref>` scope-filtered, detail/current plaintext hanya ke private binding meskipun command/callback dari grup. Destination chat identity, full shared-project permission dan current entity state/409 diperiksa. Current source diperbarui saat template lama diminta; private sending memeriksa permission/binding kembali.
+
+**Pengujian:** `TelegramReceiverTest|TelegramConfigurationTest|TelegramDeliveryTest` **16 passed / 195 assertions**, 52.29s; tambahan current-project/disabled-user coverage dan binding-state presentation: final `TelegramReceiverTest` **8 passed / 108 assertions**, 36.32s. Mencakup forged/malformed/dedup durable async receipt, stolen/group/expired/reused intent, wrong actor/ID, step-up/checkbox, revoke, opaque callback/unbound/cross-chat/stale/expired/viewer/revoked replay, current old-template reply, private group-command response dan Owner HTTPS fake setup tanpa stored secret. Initial PHPUnit load failure karena helper bernama `callback` menabrak final Assert method diperbaiki menjadi `callbackPayload` sebelum retry. TypeScript/Vite build **33.34s** passed; Pint/docs/diff integrity passed.
+
+**Batas:** fake bot/update/transport only; **native implemented, live-unverified**. Tidak ada webhook/chat production dikonfigurasi atau token nyata digunakan. Group readership tetap Owner-confirmed scope; bot tidak mengaudit anggota grup. Dashboard confirmation wajib: stolen token sendiri tidak finalizes binding. Only environment secret resolver tersedia; managed production secrets integration/provisioning belum divalidasi. New Telegram pages HTTP/Inertia/build tested, browser dituntaskan pada gate 09. Operational retry/reconcile/digest/degradation masih 08, runtime migration masih pending.
+
+**Commit/push:** scoped task commit/push biasa sesudah review; exact receipt pada task berikutnya. IP-M2-06 `77dc97ca9e9555891c47b75603b2ac598f24b280` pushed dan remote exact verified.
+
+**Next step:** **IP-M2-08** — re-read/reconcile obsolete events, destination down-delivery recovery history, unknown/crash/bounded retries/jitter/429, critical priority + quiet/digest, integration finding/action dan scoped pending/failed/unknown dashboard. Dependency 06/07 domain/receiver dan M1 incident/renewal events tersedia. Fake tests tidak terblokir credential; live validation tetap unavailable sampai Owner setup/test. Lanjut 09 untuk full demo/TC gate, stop sebelum M3.

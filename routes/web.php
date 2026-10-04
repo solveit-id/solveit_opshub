@@ -5,6 +5,7 @@ use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistryPageController;
 use App\Http\Controllers\RenewalPageController;
+use App\Http\Controllers\TelegramBindingController;
 use App\Http\Controllers\TelegramConfigurationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:project.read'])->group(function (): void {
     Route::get('/organizations/{organization}/renewals', [RenewalPageController::class, 'index'])->name('renewals.index');
     Route::get('/organizations/{organization}/telegram', [TelegramConfigurationController::class, 'index'])->name('telegram.settings');
+    Route::get('/organizations/{organization}/telegram-binding', [TelegramBindingController::class, 'index'])->name('telegram.binding');
     Route::get('/organizations/{organization}/follow-ups/{followup}', [RenewalPageController::class, 'show'])->name('followups.show');
     Route::get('/organizations/{organization}/client-templates', [ClientTemplateController::class, 'page'])->name('client-templates.page');
     Route::get('/organizations/{organization}/overview', [MonitoringController::class, 'overview'])->name('monitoring.overview');

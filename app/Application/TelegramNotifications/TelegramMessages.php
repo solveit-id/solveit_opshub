@@ -68,8 +68,9 @@ class TelegramMessages
         }
 
         $messages = [];
+        $buttons = app(TelegramCallbacks::class)->buttons($event, $dest);
         foreach ($this->segment($text) as $part) {
-            $messages[] = ['kind' => 'internal', 'text' => $part, 'reply_markup' => ['inline_keyboard' => [[['text' => 'Buka dashboard', 'url' => $link]]]], 'project_ids' => $ids];
+            $messages[] = ['kind' => 'internal', 'text' => $part, 'reply_markup' => ['inline_keyboard' => array_values(array_filter([[['text' => 'Buka dashboard', 'url' => $link]], $buttons]))], 'project_ids' => $ids];
         }
         foreach ($clientParts as $part) {
             $messages[] = ['kind' => 'client_template', 'text' => $part, 'reply_markup' => null, 'project_ids' => $ids];

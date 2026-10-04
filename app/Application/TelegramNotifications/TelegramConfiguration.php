@@ -7,6 +7,8 @@ use App\Application\ClientTemplates\PlaintextRenderer;
 use App\Application\IdentityAccess\OrganizationAuthorizationService;
 use App\Application\IdentityAccess\ProjectAccess;
 use App\Domain\IdentityAccess\Role;
+use App\Infrastructure\Telegram\NativeTelegramTransport;
+use App\Infrastructure\Telegram\TelegramSecretResolver;
 use App\Infrastructure\Telegram\TelegramTransport;
 use App\Models\Organization;
 use App\Models\Project;
@@ -37,7 +39,7 @@ class TelegramConfiguration
             abort_unless(($bot?->version ?? 0) === $data['version'], 409);
             $rotated = $bot && ($bot->token_secret_reference !== $data['token_secret_reference'] || $bot->webhook_secret_reference !== $data['webhook_secret_reference']);
             abort_unless(! $data['enabled'] || ($bot?->identity_verified_at && ! $rotated && (! $bot->identity_fake || app()->environment('testing'))), 422, 'Test bot identity sebelum enable; rotated token harus diverifikasi ulang.');
-            $settings = ['timezone' => $data['timezone'], 'digest_time' => $data['digest_time'], 'quiet_start' => $data['quiet_start'], 'quiet_end' => $data['quiet_end'], 'group_per_minute' => 15, 'private_per_second' => 1, 'bot_per_second' => 20];
+            $settings = [...($rotated ? [] : ($bot?->settings ?? [])), 'timezone' => $data['timezone'], 'digest_time' => $data['digest_time'], 'quiet_start' => $data['quiet_start'], 'quiet_end' => $data['quiet_end'], 'group_per_minute' => 15, 'private_per_second' => 1, 'bot_per_second' => 20];
             $values = ['name' => $data['name'], 'token_secret_reference' => $data['token_secret_reference'], 'webhook_secret_reference' => $data['webhook_secret_reference'], 'enabled' => $data['enabled'], 'settings' => $settings, 'version' => ($bot?->version ?? 0) + 1];
             if ($bot) {
                 if ($rotated) {
@@ -114,6 +116,38 @@ class TelegramConfiguration
 
             return $dest->fresh();
         });
+    }
+
+    public function webhook(Organization $org, User $actor, int $version): array
+    {
+        $this->owner($org, $actor);
+        $bot = TelegramBot::forOrganization($org)->firstOrFail();
+        abort_unless($bot->version === $version && $bot->enabled && $bot->identity_verified_at, 409);
+        if (! config('opshub.live_connectors_enabled') && app(TelegramTransport::class) instanceof NativeTelegramTransport) {
+            return ['status' => 'unavailable', 'code' => 'LIVE_DISABLED'];
+        }
+        $url = rtrim(config('app.url'), '/');
+        $parsed = parse_url($url);
+        abort_unless(($parsed['scheme'] ?? '') === 'https' && isset($parsed['host']) && ! isset($parsed['user']) && ! isset($parsed['pass']) && ! isset($parsed['query']) && ! isset($parsed['fragment']), 422, 'Webhook membutuhkan APP_URL HTTPS yang aman.');
+        try {
+            $secret = app(TelegramSecretResolver::class)->resolve($bot->webhook_secret_reference);
+        } catch (\Throwable) {
+            abort(422, 'Webhook secret reference tidak tersedia.');
+        }
+        abort_unless(preg_match('/^[A-Za-z0-9_-]{1,256}$/', $secret), 422);
+        $result = app(TelegramTransport::class)->request($bot, 'setWebhook', ['url' => $url.'/api/telegram/webhook/'.$bot->id, 'secret_token' => $secret, 'allowed_updates' => ['message', 'callback_query'], 'drop_pending_updates' => false]);
+        if ($result->outcome === 'accepted') {
+            DB::transaction(function () use ($org, $actor, $bot, $version, $result) {
+                Organization::whereKey($org->id)->lockForUpdate()->firstOrFail();
+                $this->owner($org->fresh(), $actor->fresh());
+                $locked = TelegramBot::whereKey($bot->id)->lockForUpdate()->firstOrFail();
+                abort_unless($locked->version === $version, 409);
+                $locked->update(['settings' => [...$locked->settings, 'webhook_configured_at' => now('UTC')->toIso8601String(), 'webhook_identity_version' => $locked->identity_version, 'webhook_fake' => $result->fake], 'version' => $version + 1]);
+                app(AuditWriter::class)->write($org, 'telegram.webhook_configured', 'TelegramBot', $bot->id, 'success', $actor, after: ['fake' => $result->fake]);
+            });
+        }
+
+        return ['status' => $result->outcome, 'code' => $result->code, 'fake' => $result->fake];
     }
 
     public function testIntent(Organization $org, User $actor, TelegramDestination $dest, int $version): int

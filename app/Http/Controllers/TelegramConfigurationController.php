@@ -46,6 +46,13 @@ class TelegramConfigurationController extends Controller
         return response()->json(['data' => app(TelegramConfiguration::class)->destination($organization, $request->user(), $request->all(), $destination)], $destination ? 200 : 201);
     }
 
+    public function webhook(Request $request, Organization $organization)
+    {
+        $data = $request->validate(['version' => ['required', 'integer', 'min:1']]);
+
+        return response()->json(['data' => app(TelegramConfiguration::class)->webhook($organization, $request->user(), $data['version'])]);
+    }
+
     public function test(Request $request, Organization $organization, TelegramDestination $destination)
     {
         app(TelegramConfiguration::class)->owner($organization, $request->user());

@@ -80,6 +80,7 @@ export default function Authenticated({
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
+                                        {organization && <Dropdown.Link href={route('telegram.binding', organization.id)}>Telegram pribadi</Dropdown.Link>}
                                         <Dropdown.Link
                                             href={route('profile.edit')}
                                         >
@@ -172,7 +173,8 @@ export default function Authenticated({
                         )}
                     </div>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4">
+                        <div className="border-t border-gray-200 pb-1 pt-4">
+                            {organization && <ResponsiveNavLink href={route('telegram.binding', organization.id)}>Telegram pribadi</ResponsiveNavLink>}
                         <div className="px-4">
                             <div className="text-base font-medium text-gray-800">
                                 {user.name}

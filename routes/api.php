@@ -9,17 +9,29 @@ use App\Http\Controllers\MonitoringPolicyController;
 use App\Http\Controllers\RegistryController;
 use App\Http\Controllers\RegistryMetadataController;
 use App\Http\Controllers\RenewalPageController;
+use App\Http\Controllers\TelegramBindingController;
 use App\Http\Controllers\TelegramConfigurationController;
+use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Middleware\EnsureRegistryProjectScope;
 use Illuminate\Support\Facades\Route;
 
 // Dashboard APIs share the browser session and enforce CSRF on every mutation.
+Route::post('/telegram/webhook/{bot}', TelegramWebhookController::class)->whereNumber('bot');
 Route::middleware('web')->group(function (): void {
+    Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])->prefix('/v1/organizations/{organization}/telegram-binding')->group(function (): void {
+        Route::get('/', [TelegramBindingController::class, 'index']);
+        Route::middleware('step-up')->group(function (): void {
+            Route::post('/', [TelegramBindingController::class, 'start']);
+            Route::post('/{intent}/confirm', [TelegramBindingController::class, 'confirm']);
+            Route::delete('/', [TelegramBindingController::class, 'revoke']);
+        });
+    });
     Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])->prefix('/v1/organizations/{organization}/telegram')->group(function (): void {
         Route::get('/', [TelegramConfigurationController::class, 'index']);
         Route::middleware('step-up')->group(function (): void {
             Route::put('/bot', [TelegramConfigurationController::class, 'bot']);
             Route::post('/identity', [TelegramConfigurationController::class, 'identity']);
+            Route::post('/webhook', [TelegramConfigurationController::class, 'webhook']);
             Route::post('/destinations', [TelegramConfigurationController::class, 'destination']);
             Route::patch('/destinations/{destination}', [TelegramConfigurationController::class, 'destination']);
             Route::post('/destinations/{destination}/test', [TelegramConfigurationController::class, 'test']);

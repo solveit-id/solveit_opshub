@@ -2,17 +2,12 @@
 
 namespace App\Application\TelegramNotifications;
 
-use App\Application\IdentityAccess\OrganizationAuthorizationService;
-use App\Application\IdentityAccess\ProjectAccess;
 use App\Infrastructure\Telegram\NativeTelegramTransport;
 use App\Infrastructure\Telegram\TelegramResult;
 use App\Infrastructure\Telegram\TelegramTransport;
 use App\Models\Organization;
-use App\Models\Project;
 use App\Models\TelegramBot;
 use App\Models\TelegramDelivery;
-use App\Models\TelegramDestination;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -43,25 +38,11 @@ class DeliverySender
 
                 return null;
             }
-            $dest = $d->telegram_destination_id ? TelegramDestination::forOrganization($org)->find($d->telegram_destination_id) : null;
-            if (! $org->is_active || ! $bot->enabled || ! $bot->identity_verified_at || ($bot->identity_fake && ! app()->environment('testing')) || ! $dest?->enabled) {
-                $d->update(['state' => 'cancelled', 'result_code' => 'CONFIGURATION_DISABLED']);
+            $recipient = app(DeliveryRecipients::class)->resolve($d, $bot, $org);
+            if (! $recipient) {
+                $d->update(['state' => 'cancelled', 'result_code' => 'RECIPIENT_ACCESS_CHANGED']);
 
                 return null;
-            }
-            $scope = $dest->all_projects ? Project::forOrganization($org)->pluck('id')->all() : $dest->project_ids;
-            if (array_diff($d->project_ids, $scope) !== []) {
-                $d->update(['state' => 'cancelled', 'result_code' => 'DESTINATION_SCOPE_CHANGED']);
-
-                return null;
-            }
-            if ($dest->chat_type === 'private') {
-                $member = User::find($dest->member_user_id);
-                if (! $member || ! app(OrganizationAuthorizationService::class)->membership($member, $org) || (! app(ProjectAccess::class)->owner($member, $org) && app(ProjectAccess::class)->query($member, $org)->whereIn('id', $d->project_ids)->count() !== count($d->project_ids))) {
-                    $d->update(['state' => 'cancelled', 'result_code' => 'RECIPIENT_ACCESS_CHANGED']);
-
-                    return null;
-                }
             }
             if ($d->parent_delivery_id && TelegramDelivery::findOrFail($d->parent_delivery_id)->state !== 'sent') {
                 return null;
@@ -76,13 +57,13 @@ class DeliverySender
             $d->update(['state' => 'sending', 'lease_owner' => $lease, 'lease_version' => $d->lease_version + 1, 'lease_until' => $now->addSeconds(30), 'first_attempt_at' => $d->first_attempt_at ?? $now, 'last_attempt_at' => $now, 'attempts' => $d->attempts + 1]);
             DB::table('telegram_delivery_attempts')->insert(['telegram_bot_id' => $bot->id, 'telegram_delivery_id' => $d->id, 'recipient_reference' => $d->recipient_reference, 'attempt' => $d->attempts, 'started_at' => $now->format('Y-m-d H:i:s.u')]);
 
-            return [$d, $bot, $dest, $lease];
+            return [$d, $bot, $recipient, $lease];
         });
         if (! $claimed) {
             return $delivery->fresh();
         }
-        [$d, $bot, $dest, $lease] = $claimed;
-        $payload = ['chat_id' => $dest->chat_id, 'text' => $d->text, 'link_preview_options' => ['is_disabled' => true]];
+        [$d, $bot, $recipient, $lease] = $claimed;
+        $payload = ['chat_id' => $recipient['chat_id'], 'text' => $d->text, 'link_preview_options' => ['is_disabled' => true]];
         if ($d->reply_markup) {
             $payload['reply_markup'] = $d->reply_markup;
         }
