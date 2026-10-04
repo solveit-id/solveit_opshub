@@ -4,7 +4,9 @@
 
 **Status milestone terakhir:** M1 — `MILESTONE_READY` dalam scope engineering lokal yang disetujui Owner; Internal v1 belum ready.
 
-**Task terakhir:** `IP-M1-10` — selesai dalam scope M1; tidak ada task aktif sesudah penutupan. M2 belum dimulai.
+**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-02` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
+
+**Task terakhir:** `IP-M2-01` — implemented/tested; M2 dimulai atas instruksi lanjutan Owner, tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -25,6 +27,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 7. [Riwayat validasi fondasi M0](#7-riwayat-validasi-fondasi-m0)
 8. [Riwayat commit dan push](#8-riwayat-commit-dan-push)
 9. [Aturan pembaruan checkpoint](#9-aturan-pembaruan-checkpoint)
+10. [Progres M2](#10-progres-m2--telegram-renewal-dan-client-action-loop)
 
 ## 1. Ringkasan progres dan keputusan berikutnya
 
@@ -32,7 +35,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 |---|---|---|---|
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
-| M2 — Telegram/renewal/client loop | Belum dimulai. | Belum dievaluasi. | `IP-M2-01` setelah instruksi milestone berikutnya; sequencing M1 sudah terselesaikan. |
+| M2 — Telegram/renewal/client loop | IP-M2-01 implemented/tested; 02–09 belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-02 scheduler threshold; delivery/template/workflow mengikuti dependency. |
 | M3 — Connector dan verified backup | Belum dimulai. | Belum dievaluasi. | Dependency canonical account, authorization, notification dan sandbox. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
@@ -486,3 +489,31 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 **Commit/push:** receipt akhir tersedia di Git history untuk commit `(docs) consolidate checkpoints, organize roadmap and add project instructions`; remote/head diperiksa sesudah push biasa. Jangan menganggap push berhasil sebelum evidence tersedia.
 
 **Next step:** tetap `IP-M1-10` exit-gate review dengan dependency/blocker bagian 1.2; perubahan dokumen tidak mengotorisasi M2 atau aksi live.
+
+## 10. Progres M2 — Telegram, renewal dan client action loop
+
+**Baseline:** `main`/`origin/main` bersih pada `e6bbd34766b7d83e1f78d1075cac782e6dab2ad5`; Owner menginstruksikan melanjutkan milestone pertama yang belum selesai sesudah M1 ditutup. Scope aktif M2 saja; M3 belum dimulai. Semua probe/connector live tetap disabled dan tidak ada bot/destination production dikonfigurasi.
+
+| Task | Status | Evidence / pekerjaan tersisa |
+|---|---|---|
+| IP-M2-01 | implemented/tested | Expiry/source/date precision, billing/payment terpisah; canonical subscription dan unique active cycle/primary follow-up; append-only contact model, derived overdue dan metadata version/409. |
+| IP-M2-02 | not_started | Threshold/calendar scheduler, shared reminder, idempotent escalation dan bounded snooze/pause. |
+| IP-M2-03 | not_started | Follow-up/contact/response/renewal verification workflow. |
+| IP-M2-04 | not_started | Sepuluh versioned templates, mandatory-variable validation dan deterministic drafts. |
+| IP-M2-05 | not_started | Dashboard Copy/Mark contacted/current draft/verified resolution. |
+| IP-M2-06 | not_started | Telegram config/destination/outbox/domain/renderer. |
+| IP-M2-07 | not_started | Binding/webhook/commands/constrained callbacks. |
+| IP-M2-08 | not_started | Delivery/history guard/retries/digest/degradation. |
+| IP-M2-09 | not_started | Full demo/TC-11–25/38 plus allocated TC-03/05/10 assertions dan exit gate. |
+
+### IP-M2-01 — Model renewal dan follow-up
+
+**Hasil:** migration/model untuk canonical renewal resource, satu active cycle per service dan satu primary follow-up per cycle; UTC instants terpisah dari date-only sumber IANA, billing due/payment status/renew_by terpisah; histori contact append-only dan overdue derived. Metadata memakai locked version/409; koreksi expiry wajib reason/evidence dan tidak memverifikasi renewal. Organization/resource scope dan duplicate canonical subscriptions dicegah. Data awal lama dapat memperoleh cycle melalui service tanpa reset runtime.
+
+**Pengujian:** `php artisan test --filter='RenewalModelTest|RegistryMetadataTest|MonitoringWorkflowTest|ObservationTest|MonitoringConcurrencyTest'` **16 passed / 130 assertions**, 43.89s pada MySQL `solveit_opshub_test`; mencakup uniqueness database, canonical/cross-org denial, date/instant/billing, stale version, correction vs verification, append-only contact, UTC/fencing dan migration rollback/race dua proses. Pint dan strict Composer validation lulus. Diagnosis awal: mapping Evidence mengarah ke `evidence` sementara schema `evidences`; diperbaiki. Fixture organization harus mengisi active untuk pemanggilan service sebelum hydrate, dan UTC helper menjaga date-only tidak bergeser. Kegagalan tidak dinonaktifkan.
+
+**Batas:** belum ada reminder, rendered draft atau Telegram delivery; pengujian fixture tidak berarti client telah dihubungi/renewed. Runtime migration masih pending, persistent data tidak di-reset. UI/build/browser/suite penuh belum diulang pada task model ini; manifest M1 tersedia. Task selanjutnya akan menambahkan perilaku sesuai acceptance, bukan mengklaim schema sudah mencakup gate M2.
+
+**Commit/push:** task siap untuk scoped commit dan push biasa; hash/receipt terverifikasi dicatat saat task berikutnya.
+
+**Next step:** **IP-M2-02** — scheduler H-60/30/14/7/3/1/0 dan timezone calendar, skipped history/highest applicable threshold, canonical shared reminder/outbox, bounded snooze/escalation. Dependency IP-M2-01 dan fondasi atomic outbox M0 tersedia; tidak memerlukan token live.

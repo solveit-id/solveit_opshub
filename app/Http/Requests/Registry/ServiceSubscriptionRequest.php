@@ -13,6 +13,13 @@ class ServiceSubscriptionRequest extends FormRequest
     {
         return [
             'asset_id' => ['required', 'integer'],
+            'version' => [$this->isMethod('PATCH') ? 'required' : 'sometimes', 'integer', 'min:1'],
+            'service_name' => ['nullable', 'string', 'max:255', new RejectSecretBearingValue],
+            'service_kind' => ['sometimes', Rule::in(['domain', 'hosting', 'maintenance_contract', 'license', 'credential_expiry', 'unknown'])],
+            'resource_asset_id' => ['nullable', 'integer'],
+            'renew_by' => ['nullable', 'date'],
+            'payment_status' => ['sometimes', Rule::in(['unknown', 'awaiting', 'reported_paid', 'verified_paid', 'not_required'])],
+            'correction_reason' => ['nullable', 'string', 'max:2000', new RejectSecretBearingValue],
             'billing_party' => ['required', Rule::in(['solveit', 'client', 'shared', 'provider', 'unknown'])],
             'billing_due_at' => ['nullable', 'date'],
             'paying_party' => ['required', Rule::in(['solveit', 'client', 'shared', 'provider', 'unknown'])],

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Concerns\StoresUtcDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceSubscription extends Model
 {
     use BelongsToOrganization;
+    use StoresUtcDates;
 
     protected $fillable = [
         'organization_id',
@@ -25,6 +28,7 @@ class ServiceSubscription extends Model
         'evidence_id',
         'reminder_policy',
         'version',
+        'service_name', 'service_kind', 'resource_asset_id', 'renew_by', 'payment_status',
     ];
 
     protected function casts(): array
@@ -34,6 +38,7 @@ class ServiceSubscription extends Model
             'expires_at' => 'datetime',
             'expiry_date' => 'date',
             'reminder_policy' => 'array',
+            'renew_by' => 'immutable_datetime',
         ];
     }
 
@@ -45,5 +50,10 @@ class ServiceSubscription extends Model
     public function evidence(): BelongsTo
     {
         return $this->belongsTo(Evidence::class);
+    }
+
+    public function cycles(): HasMany
+    {
+        return $this->hasMany(RenewalCycle::class);
     }
 }

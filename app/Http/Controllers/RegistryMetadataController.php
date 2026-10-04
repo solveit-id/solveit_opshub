@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\ActivityEvidence\AuditWriter;
 use App\Application\IdentityAccess\OrganizationAuthorizationService;
+use App\Application\RenewalFollowups\SubscriptionRegistry;
 use App\Http\Requests\Registry\HostingAccountRequest;
 use App\Http\Requests\Registry\ManagementAuthorizationRequest;
 use App\Http\Requests\Registry\ServiceSubscriptionRequest;
@@ -66,8 +67,7 @@ class RegistryMetadataController extends Controller
             throw ValidationException::withMessages(['asset_id' => 'Asset layanan ini sudah memiliki metadata subscription.']);
         }
 
-        $subscription = ServiceSubscription::create(['organization_id' => $organization->id, ...$data]);
-        $this->audit($request, $organization, 'registry.service_subscription.created', $subscription, [], $subscription->getAttributes());
+        $subscription = app(SubscriptionRegistry::class)->save($organization, $request->user(), $data);
 
         return response()->json(['data' => $subscription], 201);
     }
@@ -82,9 +82,7 @@ class RegistryMetadataController extends Controller
             throw ValidationException::withMessages(['asset_id' => 'Asset layanan ini sudah memiliki metadata subscription.']);
         }
         $this->evidence($organization, $data['evidence_id'] ?? null);
-        $before = $serviceSubscription->getAttributes();
-        $serviceSubscription->update([...$data, 'version' => $serviceSubscription->version + 1]);
-        $this->audit($request, $organization, 'registry.service_subscription.updated', $serviceSubscription, $before, $serviceSubscription->getAttributes());
+        $serviceSubscription = app(SubscriptionRegistry::class)->save($organization, $request->user(), $data, $serviceSubscription);
 
         return response()->json(['data' => $serviceSubscription->fresh()]);
     }

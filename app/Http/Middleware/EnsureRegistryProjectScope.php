@@ -26,7 +26,7 @@ class EnsureRegistryProjectScope
         }
         $visible = $access->query($request->user(), $org)->pluck('id');
         $models = array_filter($request->route()->parameters(), fn ($model) => is_object($model) && $model !== $org);
-        foreach (['project_id' => Project::class, 'environment_id' => Environment::class, 'asset_id' => Asset::class, 'client_id' => Client::class] as $field => $class) {
+        foreach (['project_id' => Project::class, 'environment_id' => Environment::class, 'asset_id' => Asset::class, 'resource_asset_id' => Asset::class, 'client_id' => Client::class] as $field => $class) {
             if ($request->filled($field)) {
                 $models[] = $class::findOrFail($request->input($field));
             }
