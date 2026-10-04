@@ -79,13 +79,16 @@ class EffectiveMonitoringPolicyService
             if (isset($override['enabled']) && ! is_bool($override['enabled'])) {
                 throw ValidationException::withMessages(["overrides.checks.{$check}.enabled" => 'enabled harus boolean.']);
             }
+            if (($override['enabled'] ?? false) && ! $base['checks'][$check]['enabled']) {
+                throw ValidationException::withMessages(["overrides.checks.{$check}.enabled" => 'Override tidak boleh mengaktifkan check yang dinonaktifkan policy.']);
+            }
             if (isset($override['interval_seconds']) && (! is_int($override['interval_seconds']) || $override['interval_seconds'] < $base['checks'][$check]['interval_seconds'])) {
                 throw ValidationException::withMessages(["overrides.checks.{$check}.interval_seconds" => 'Override tidak boleh mempercepat interval policy.']);
             }
         }
     }
 
-    private function applyOverrides(array $base, array $overrides): array
+    public function applyOverrides(array $base, array $overrides): array
     {
         foreach ($overrides['checks'] ?? [] as $check => $override) {
             $base['checks'][$check] = [...$base['checks'][$check], ...$override];

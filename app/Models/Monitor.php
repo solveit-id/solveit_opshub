@@ -29,6 +29,11 @@ class Monitor extends Model
 
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class, 'monitor_usages')->withPivot('environment_id');
+        return $this->belongsToMany(Project::class, 'monitor_usages')->withPivot(['environment_id', 'active']);
+    }
+
+    public function activeProjects(): BelongsToMany
+    {
+        return $this->projects()->wherePivot('active', true);
     }
 }

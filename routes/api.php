@@ -17,6 +17,7 @@ Route::middleware('web')->group(function (): void {
     Route::middleware(['auth', 'active.user', 'organization.access:project.read'])
         ->prefix('/v1/organizations/{organization}/monitoring')->group(function (): void {
             Route::get('/overview', [MonitoringController::class, 'overview']);
+            Route::get('/health', [MonitoringController::class, 'runtimeHealth']);
             Route::get('/incidents/{incident}', [MonitoringController::class, 'incident']);
             Route::post('/incidents/{incident}/{action}', [MonitoringController::class, 'action'])->whereIn('action', ['acknowledge', 'investigate', 'assign', 'close']);
             Route::post('/projects/{project}/access', [MonitoringController::class, 'grantAccess']);

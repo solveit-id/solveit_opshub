@@ -3,6 +3,7 @@
 namespace App\Application\IdentityAccess;
 
 use App\Domain\IdentityAccess\Role;
+use App\Models\Incident;
 use App\Models\Monitor;
 use App\Models\Organization;
 use App\Models\Project;
@@ -44,5 +45,16 @@ class ProjectAccess
         $projects = $monitor->projects()->pluck('projects.id');
         $visible = $this->query($user, $organization)->whereIn('id', $projects)->count();
         abort_unless($visible > 0 && (! $all || $visible === $projects->count()), 404);
+    }
+
+    public function requireIncident(User $user, Organization $organization, Incident $incident, bool $all = false): void
+    {
+        abort_unless($incident->organization_id === $organization->id, 404);
+        if ($this->owner($user, $organization)) {
+            return;
+        }
+        $ids = $incident->projects()->pluck('projects.id');
+        $visible = $this->query($user, $organization)->whereIn('id', $ids)->count();
+        abort_unless($visible > 0 && (! $all || $visible === $ids->count()), 404);
     }
 }

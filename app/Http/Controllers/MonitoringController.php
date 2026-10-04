@@ -7,6 +7,7 @@ use App\Application\IdentityAccess\OrganizationAuthorizationService;
 use App\Application\IdentityAccess\ProjectAccess;
 use App\Application\Monitoring\IncidentActions;
 use App\Application\Monitoring\MonitoringHealth;
+use App\Application\Monitoring\RuntimeHealth;
 use App\Application\PolicyScheduling\IdempotencyService;
 use App\Models\Asset;
 use App\Models\IdempotencyKey;
@@ -29,17 +30,24 @@ class MonitoringController extends Controller
         $projects = $this->access->query($request->user(), $organization)->get()->map(fn ($project) => [...$project->only(['id', 'name', 'code', 'lifecycle', 'internal_pic_user_id']), ...$this->health->project($project)]);
         $projects = $projects->sortBy(fn ($project) => [array_search($project['health'], ['critical', 'warning', 'unknown', 'healthy']), $project['name']])->values();
         $ids = $projects->pluck('id');
-        $incidents = Incident::forOrganization($organization)->whereHas('monitor.projects', fn ($query) => $query->whereIn('projects.id', $ids))->orderByRaw("CASE severity WHEN 'critical' THEN 0 ELSE 1 END")->orderBy('confirmed_down_at')->get()->map(fn ($incident) => $this->incidentData($request, $organization, $incident, false));
+        $incidents = Incident::forOrganization($organization)->whereHas('projects', fn ($query) => $query->whereIn('projects.id', $ids))->orderByRaw("CASE severity WHEN 'critical' THEN 0 ELSE 1 END")->orderBy('confirmed_down_at')->get()->map(fn ($incident) => $this->incidentData($request, $organization, $incident, false));
         $data = ['organization' => $organization->only(['id', 'name', 'timezone']), 'projects' => $projects, 'incidents' => $incidents, 'counts' => $projects->countBy('health'), 'validation' => 'Live monitoring belum diverifikasi; evidence fake selalu diberi label.'];
 
         return $request->is('api/*') ? response()->json(['data' => $data]) : Inertia::render('Monitoring/Overview', $data);
     }
 
+    public function runtimeHealth(Request $request, Organization $organization)
+    {
+        $data = ['organization' => $organization->only(['id', 'name', 'timezone']), ...app(RuntimeHealth::class)->snapshot($organization)];
+
+        return $request->is('api/*') ? response()->json(['data' => $data]) : Inertia::render('Monitoring/Health', $data);
+    }
+
     public function incident(Request $request, Organization $organization, Incident $incident)
     {
-        $this->access->requireMonitor($request->user(), $organization, $incident->monitor);
-        $data = ['organization' => $organization->only(['id', 'name', 'timezone']), 'incident' => $this->incidentData($request, $organization, $incident, true), 'canManage' => $this->canManage($request, $organization, $incident->monitor),
-            'assignees' => Membership::where('organization_id', $organization->id)->where('is_active', true)->whereHas('user', fn ($query) => $query->where('is_active', true))->with('user:id,name')->get()->filter(fn ($membership) => $membership->role->can('incident.manage') && $incident->monitor->projects()->get()->every(fn ($project) => $this->access->query($membership->user, $organization)->whereKey($project->id)->exists()))->map(fn ($membership) => $membership->user->only(['id', 'name']))->values()];
+        $this->access->requireIncident($request->user(), $organization, $incident);
+        $data = ['organization' => $organization->only(['id', 'name', 'timezone']), 'incident' => $this->incidentData($request, $organization, $incident, true), 'canManage' => $this->canManage($request, $organization, $incident),
+            'assignees' => Membership::where('organization_id', $organization->id)->where('is_active', true)->whereHas('user', fn ($query) => $query->where('is_active', true))->with('user:id,name')->get()->filter(fn ($membership) => $membership->role->can('incident.manage') && $incident->projects()->get()->every(fn ($project) => $this->access->query($membership->user, $organization)->whereKey($project->id)->exists()))->map(fn ($membership) => $membership->user->only(['id', 'name']))->values()];
 
         return $request->is('api/*') ? response()->json(['data' => $data]) : Inertia::render('Monitoring/Incident', $data);
     }
@@ -57,14 +65,14 @@ class MonitoringController extends Controller
     public function action(Request $request, Organization $organization, Incident $incident, string $action)
     {
         $this->authorization->require($request->user(), $organization, 'incident.manage');
-        $this->access->requireMonitor($request->user(), $organization, $incident->monitor, true);
+        $this->access->requireIncident($request->user(), $organization, $incident, true);
         $data = $request->validate(['version' => ['required', 'integer', 'min:1'], 'summary' => ['nullable', 'string', 'max:2000', new RejectSecretBearingValue], 'assignee_user_id' => ['nullable', 'integer']]);
         $key = $request->header('Idempotency-Key');
         abort_unless(is_string($key) && preg_match('/^[a-zA-Z0-9-]{8,80}$/', $key), 422, 'Idempotency-Key wajib.');
         if ($action === 'assign') {
             $assignee = Membership::where('organization_id', $organization->id)->where('user_id', $data['assignee_user_id'] ?? 0)->where('is_active', true)->first();
             abort_unless($assignee !== null && $assignee->user->is_active && $assignee->role->can('incident.manage'), 422, 'Assignee harus operator aktif dalam scope.');
-            $this->access->requireMonitor($assignee->user, $organization, $incident->monitor, true);
+            $this->access->requireIncident($assignee->user, $organization, $incident, true);
         }
         $response = DB::transaction(function () use ($request, $organization, $incident, $action, $data, $key): array {
             Monitor::whereKey($incident->monitor_id)->lockForUpdate()->firstOrFail();
@@ -104,9 +112,9 @@ class MonitoringController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    private function canManage(Request $request, Organization $organization, Monitor $monitor): bool
+    private function canManage(Request $request, Organization $organization, Incident $incident): bool
     {
-        $ids = $monitor->projects()->pluck('projects.id');
+        $ids = $incident->projects()->pluck('projects.id');
 
         return $this->authorization->can($request->user(), $organization, 'incident.manage') && ($this->access->owner($request->user(), $organization) || ($ids->isNotEmpty() && $this->access->query($request->user(), $organization)->whereIn('id', $ids)->count() === $ids->count()));
     }
@@ -115,7 +123,7 @@ class MonitoringController extends Controller
     {
         $visible = $this->access->query($request->user(), $organization)->pluck('id');
         $data = [...$incident->only(['id', 'state', 'severity', 'reason_code', 'assignee_user_id', 'acknowledged_at', 'first_failed_at', 'confirmed_down_at', 'last_failed_at', 'first_recovery_sample_at', 'confirmed_recovered_at', 'closure_summary', 'version', 'flapping']),
-            'impacted_projects' => $incident->monitor->projects()->whereIn('projects.id', $visible)->get(['projects.id', 'projects.name']), 'environment_kind' => $incident->monitor->environment_kind];
+            'impacted_projects' => $incident->projects()->whereIn('projects.id', $visible)->get(['projects.id', 'projects.name']), 'environment_kind' => $incident->monitor->environment_kind];
         if ($detail) {
             $data['observations'] = $incident->observations()->orderByDesc('scheduled_at')->limit(100)->get();
             $data['timeline'] = DB::table('incident_transitions')->where('incident_id', $incident->id)->orderBy('occurred_at')->get();

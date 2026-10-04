@@ -22,11 +22,11 @@ class MonitoringHealth
 
     public function project(Project $project, ?CarbonImmutable $now = null): array
     {
-        $monitors = Monitor::forOrganization($project->organization_id)->whereHas('projects', fn ($query) => $query->where('projects.id', $project->id))->get();
+        $monitors = Monitor::forOrganization($project->organization_id)->whereHas('activeProjects', fn ($query) => $query->where('projects.id', $project->id))->get();
         $checks = $monitors->map(fn ($monitor) => $this->monitor($monitor, $now));
         $production = $monitors->where('environment_kind', 'production');
         $coreFresh = $production->contains(fn ($monitor) => $monitor->kind === 'http' && $this->monitor($monitor, $now)['freshness'] === 'fresh' && in_array($this->monitor($monitor, $now)['last_observation']?->outcome, ['pass', 'fail', 'warn'], true));
-        $critical = Incident::forOrganization($project->organization_id)->whereIn('monitor_id', $production->pluck('id'))->where('severity', 'critical')->whereNotIn('state', ['resolved', 'closed'])->exists();
+        $critical = Incident::forOrganization($project->organization_id)->whereHas('projects', fn ($query) => $query->where('projects.id', $project->id))->where('severity', 'critical')->whereNotIn('state', ['resolved', 'closed'])->exists();
         $gaps = ['backup' => 'not_configured', 'application_health' => 'unsupported'];
         $unhealthy = $checks->contains(fn ($check) => $check['freshness'] !== 'fresh' || ! in_array($check['last_observation']?->outcome, ['pass', 'not_applicable'], true));
         $health = $critical ? 'critical' : (! $coreFresh ? 'unknown' : 'warning');

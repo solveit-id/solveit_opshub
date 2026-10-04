@@ -2,6 +2,8 @@
 
 namespace App\Application\PolicyScheduling;
 
+use App\Rules\RejectSecretBearingValue;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class MonitoringPolicyConfiguration
@@ -22,6 +24,21 @@ class MonitoringPolicyConfiguration
 
     public function validate(array $configuration): void
     {
+        Validator::make($configuration, [
+            'checks' => ['required', 'array:http,tls,dns'],
+            'checks.http' => ['required', 'array:enabled,interval_seconds,failure_threshold,recovery_threshold,allowed_statuses,timeout_seconds,body_limit,redirect_limit,expected_text'],
+            'checks.http.allowed_statuses' => ['sometimes', 'array', 'min:1', 'max:500'],
+            'checks.http.allowed_statuses.*' => ['integer', 'between:100,599'],
+            'checks.http.timeout_seconds' => ['sometimes', 'integer', 'between:1,10'],
+            'checks.http.body_limit' => ['sometimes', 'integer', 'between:1,1048576'],
+            'checks.http.redirect_limit' => ['sometimes', 'integer', 'between:0,5'],
+            'checks.http.expected_text' => ['sometimes', 'nullable', 'string', 'min:1', 'max:1024', new RejectSecretBearingValue],
+            'checks.tls' => ['required', 'array:enabled,interval_seconds,warning_days,critical_days'],
+            'checks.dns' => ['required', 'array:enabled,interval_seconds,record_type,expected_values'],
+            'checks.dns.record_type' => ['sometimes', 'in:A,AAAA,CNAME,MX,NS'],
+            'checks.dns.expected_values' => ['sometimes', 'array', 'min:1', 'max:100'],
+            'checks.dns.expected_values.*' => ['string', 'max:253', 'regex:/^[a-zA-Z0-9.:\-]+$/'],
+        ])->validate();
         foreach (['timezone', 'checks'] as $key) {
             if (! array_key_exists($key, $configuration)) {
                 throw ValidationException::withMessages(['configuration' => "Konfigurasi policy membutuhkan {$key}."]);

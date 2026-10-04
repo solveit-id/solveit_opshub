@@ -22,6 +22,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:project.read'])->group(function (): void {
     Route::get('/organizations/{organization}/overview', [MonitoringController::class, 'overview'])->name('monitoring.overview');
+    Route::get('/organizations/{organization}/health', [MonitoringController::class, 'runtimeHealth'])->name('monitoring.health');
     Route::get('/organizations/{organization}/incidents/{incident}', [MonitoringController::class, 'incident'])->name('monitoring.incidents.show');
     Route::get('/organizations/{organization}/assets/{asset}', [MonitoringController::class, 'asset'])->name('monitoring.assets.show');
     Route::get('/organizations/{organization}/registry', [RegistryPageController::class, 'index'])->name('registry.page');

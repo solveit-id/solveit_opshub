@@ -20,7 +20,7 @@ class ProjectLifecycleService
             return JobRun::query()
                 ->forOrganization($project->organization_id)
                 ->where('state', 'queued')
-                ->where('scheduled_slot', '>', now())
+                ->where('scheduled_slot', '>', now('UTC'))
                 ->where(function ($query) use ($project, $environmentIds): void {
                     $query->where(function ($projectQuery) use ($project): void {
                         $projectQuery->where('resource_type', 'project')
@@ -30,7 +30,7 @@ class ProjectLifecycleService
                             ->whereIn('resource_id', $environmentIds);
                     });
                 })
-                ->update(['state' => 'cancelled', 'updated_at' => now()]);
+                ->update(['state' => 'cancelled', 'updated_at' => now('UTC')]);
         });
     }
 }

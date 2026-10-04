@@ -61,6 +61,9 @@ class IncidentEngine
                     $incident->fill(['last_failed_at' => $observation->completed_at, 'reason_code' => $observation->reason_code, 'severity' => $observation->outcome === 'warn' ? 'warning' : 'critical', 'version' => $incident->version + 1]);
                     $incident->save();
                     if ($confirmed) {
+                        foreach ($monitor->activeProjects()->get() as $project) {
+                            $incident->projects()->syncWithoutDetaching([$project->id => ['environment_id' => $project->pivot->environment_id]]);
+                        }
                         $preceding = Observation::where('monitor_id', $monitor->id)->where('completed_at', '>=', $monitor->first_failed_at)->where('completed_at', '<=', $observation->completed_at)->pluck('id');
                         $incident->observations()->syncWithoutDetaching($preceding->all());
                         DB::table('observations')->whereIn('id', $preceding)->update(['retention_hold' => true]);
@@ -121,7 +124,7 @@ class IncidentEngine
     {
         app(OutboxWriter::class)->record(Organization::findOrFail($incident->organization_id), $type, 'incident', $incident->id, $incident->version, [
             'incident_id' => $incident->id, 'monitor_id' => $incident->monitor_id, 'environment_kind' => $incident->monitor->environment_kind,
-            'impacted_project_ids' => $incident->monitor->projects()->pluck('projects.id')->all(), ...$extra,
+            'impacted_project_ids' => $incident->projects()->pluck('projects.id')->all(), ...$extra,
         ]);
     }
 }

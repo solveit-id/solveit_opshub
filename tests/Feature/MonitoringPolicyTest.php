@@ -14,12 +14,28 @@ use App\Models\PolicyVersion;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use LogicException;
 use Tests\TestCase;
 
 class MonitoringPolicyTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_probe_configuration_cannot_escape_the_platform_envelope(): void
+    {
+        $validator = app(MonitoringPolicyConfiguration::class);
+        foreach (['timeout_seconds' => 11, 'body_limit' => 1048577, 'redirect_limit' => 6, 'expected_text' => 'Bearer unsafe-secret', 'headers' => ['Authorization' => 'secret']] as $key => $value) {
+            $config = $validator->defaults();
+            $config['checks']['http'][$key] = $value;
+            try {
+                $validator->validate($config);
+                $this->fail('Unsafe probe option accepted: '.$key);
+            } catch (ValidationException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
 
     public function test_published_policy_is_immutable_and_draft_changes_do_not_change_active_project(): void
     {

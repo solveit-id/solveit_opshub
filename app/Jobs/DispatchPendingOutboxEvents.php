@@ -24,6 +24,8 @@ class DispatchPendingOutboxEvents implements ShouldQueue
         DB::transaction(function (): void {
             $events = OutboxEvent::query()
                 ->where('status', 'pending')
+                // Incident business events await the M2 delivery consumer; never discard them as delivered.
+                ->whereIn('event_type', ['foundation.changed', 'telegram.notification.requested'])
                 ->where(fn ($query) => $query->whereNull('available_at')->orWhere('available_at', '<=', now()))
                 ->orderBy('id')
                 ->lockForUpdate()

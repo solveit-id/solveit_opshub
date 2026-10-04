@@ -28,4 +28,9 @@ class Incident extends Model
     {
         return $this->belongsToMany(Observation::class, 'incident_observations');
     }
+
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'incident_projects')->withPivot('environment_id');
+    }
 }

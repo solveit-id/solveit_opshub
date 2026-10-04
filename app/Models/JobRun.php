@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Concerns\StoresUtcDates;
 use Illuminate\Database\Eloquent\Model;
 
 class JobRun extends Model
 {
     use BelongsToOrganization;
+    use StoresUtcDates;
 
     protected $fillable = [
         'organization_id',
@@ -22,10 +24,12 @@ class JobRun extends Model
         'leased_until',
         'correlation_id',
         'last_error_code',
+        'queue_enqueued_at',
+        'missed_slots',
     ];
 
     protected function casts(): array
     {
-        return ['scheduled_slot' => 'datetime', 'leased_until' => 'datetime'];
+        return ['scheduled_slot' => 'immutable_datetime', 'leased_until' => 'immutable_datetime', 'queue_enqueued_at' => 'immutable_datetime'];
     }
 }
