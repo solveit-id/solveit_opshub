@@ -86,6 +86,9 @@ class DraftGenerator
                 $vars[$name] = $review[$name] ?? null;
             }
             $reasons = [];
+            if ($cycle->state !== 'active' && in_array($key, ['TPL-01', 'TPL-02', 'TPL-03', 'TPL-04', 'TPL-05'], true)) {
+                $reasons[] = 'closed_cycle';
+            }
             if (! $contact || trim($contact->contact_value ?? '') === '') {
                 $reasons[] = 'contact_target';
             }

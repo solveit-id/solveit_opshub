@@ -8,9 +8,17 @@ use App\Models\MessageTemplateVersion;
 use App\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ClientTemplateController extends Controller
 {
+    public function page(Request $request, Organization $organization, TemplateGovernance $service)
+    {
+        $data = $this->index($request, $organization, $service)->getData(true)['data'];
+
+        return Inertia::render('Renewals/Templates', ['organization' => $organization->only(['id', 'name', 'timezone']), 'templates' => $data]);
+    }
+
     public function index(Request $request, Organization $organization, TemplateGovernance $service): JsonResponse
     {
         $service->requireOwner($organization, $request->user());

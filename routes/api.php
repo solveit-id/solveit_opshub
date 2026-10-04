@@ -8,11 +8,18 @@ use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\MonitoringPolicyController;
 use App\Http\Controllers\RegistryController;
 use App\Http\Controllers\RegistryMetadataController;
+use App\Http\Controllers\RenewalPageController;
 use App\Http\Middleware\EnsureRegistryProjectScope;
 use Illuminate\Support\Facades\Route;
 
 // Dashboard APIs share the browser session and enforce CSRF on every mutation.
 Route::middleware('web')->group(function (): void {
+    Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])->prefix('/v1/organizations/{organization}')->group(function (): void {
+        Route::get('/renewals', [RenewalPageController::class, 'index']);
+        Route::get('/follow-ups/{followup}', [RenewalPageController::class, 'show']);
+        Route::post('/follow-ups/{followup}/drafts', [RenewalPageController::class, 'draft']);
+        Route::post('/services/{serviceSubscription}/follow-up', [RenewalPageController::class, 'start']);
+    });
     Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])
         ->post('/v1/organizations/{organization}/follow-ups/{followup}/{action}', [FollowupController::class, 'action'])
         ->whereIn('action', [...FollowupWorkflow::ACTIONS, 'snooze']);

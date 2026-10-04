@@ -113,7 +113,15 @@ class FollowupWorkflow
                 abort_unless(isset($data['date_precision'], $data['source']), 422, 'Precision dan sumber baru wajib.');
                 $data['source'] = app(PlaintextRenderer::class)->safe($data['source']);
                 $normalized = app(Expiry::class)->normalize([...$service->only($service->getFillable()), ...$data, 'renew_by' => $data['renew_by'] ?? null]);
-                $evidence = Evidence::forOrganization($org)->findOrFail($data['evidence_id'] ?? null);
+                if (! empty($data['evidence_reference'])) {
+                    if (($data['provider_evidence_confirmed'] ?? false) !== true || ! preg_match('/^evidence:[A-Za-z0-9\/_-]{3,200}$/', $data['evidence_reference'])) {
+                        throw ValidationException::withMessages(['evidence_reference' => 'Referensi evidence aman dan konfirmasi hasil pemeriksaan masa aktif provider wajib.']);
+                    }
+                    $evidence = Evidence::create(['organization_id' => $org->id, 'kind' => 'provider_expiry', 'secure_reference' => $data['evidence_reference'], 'source' => $data['source'], 'verified_at' => $now, 'verified_by_user_id' => $actor->id,
+                        'metadata' => ['service_subscription_id' => $service->id, 'date_precision' => $normalized['date_precision'], 'expiry_date' => $normalized['expiry_date'] ?? null, 'expires_at' => $normalized['expires_at'] ?? null, 'source_timezone' => $normalized['source_timezone'] ?? null]]);
+                } else {
+                    $evidence = Evidence::forOrganization($org)->findOrFail($data['evidence_id'] ?? null);
+                }
                 $oldExpiry = app(Expiry::class)->instant($cycle->expiry_snapshot);
                 $newExpiry = app(Expiry::class)->instant($normalized);
                 $verifier = $evidence->verified_by_user_id ? User::find($evidence->verified_by_user_id) : null;

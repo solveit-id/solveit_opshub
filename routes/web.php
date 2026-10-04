@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistryPageController;
+use App\Http\Controllers\RenewalPageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,6 +23,9 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified', 'owner.mfa'])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:project.read'])->group(function (): void {
+    Route::get('/organizations/{organization}/renewals', [RenewalPageController::class, 'index'])->name('renewals.index');
+    Route::get('/organizations/{organization}/follow-ups/{followup}', [RenewalPageController::class, 'show'])->name('followups.show');
+    Route::get('/organizations/{organization}/client-templates', [ClientTemplateController::class, 'page'])->name('client-templates.page');
     Route::get('/organizations/{organization}/overview', [MonitoringController::class, 'overview'])->name('monitoring.overview');
     Route::get('/organizations/{organization}/health', [MonitoringController::class, 'runtimeHealth'])->name('monitoring.health');
     Route::get('/organizations/{organization}/incidents/{incident}', [MonitoringController::class, 'incident'])->name('monitoring.incidents.show');

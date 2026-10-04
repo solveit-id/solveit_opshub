@@ -28,6 +28,7 @@ class FollowupController extends Controller
             'evidence_id' => ['nullable', 'integer'], 'date_precision' => ['nullable', Rule::in(['date', 'instant'])], 'expiry_date' => ['nullable', 'date_format:Y-m-d'],
             'expires_at' => ['nullable', 'date'], 'source_timezone' => ['nullable', 'timezone:all'], 'source' => ['nullable', 'string', 'max:255'], 'renew_by' => ['nullable', 'date'],
             'snoozed_until' => ['nullable', 'date'],
+            'evidence_reference' => ['nullable', 'string', 'max:210'], 'provider_evidence_confirmed' => ['nullable', 'boolean'],
         ]);
         $key = $request->header('Idempotency-Key');
         abort_unless(is_string($key) && preg_match('/^[a-zA-Z0-9-]{8,80}$/', $key), 422, 'Idempotency-Key wajib.');

@@ -4,9 +4,9 @@
 
 **Status milestone terakhir:** M1 — `MILESTONE_READY` dalam scope engineering lokal yang disetujui Owner; Internal v1 belum ready.
 
-**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-05` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
+**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-06` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
 
-**Task terakhir:** `IP-M2-03` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
+**Task terakhir:** `IP-M2-05` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -35,7 +35,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 |---|---|---|---|
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
-| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 03, 04 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-05; dependency dan bukti di bagian 10. |
+| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 03, 04, 05 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-06; dependency dan bukti di bagian 10. |
 | M3 — Connector dan verified backup | Belum dimulai. | Belum dievaluasi. | Dependency canonical account, authorization, notification dan sandbox. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
@@ -500,7 +500,7 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 | IP-M2-02 | implemented/tested | Calendar thresholds, skipped history/shared canonical events, bounded escalation dan reasoned expiring snooze/pause. |
 | IP-M2-03 | implemented/tested | Follow-up/contact/response/renewal verification workflow. |
 | IP-M2-04 | implemented/tested | Sepuluh versioned templates, mandatory-variable validation dan deterministic drafts. |
-| IP-M2-05 | not_started | Dashboard Copy/Mark contacted/current draft/verified resolution. |
+| IP-M2-05 | implemented/tested | Dashboard Copy/Mark contacted/current draft/verified resolution. |
 | IP-M2-06 | not_started | Telegram config/destination/outbox/domain/renderer. |
 | IP-M2-07 | not_started | Binding/webhook/commands/constrained callbacks. |
 | IP-M2-08 | not_started | Delivery/history guard/retries/digest/degradation. |
@@ -556,3 +556,20 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 **Commit/push:** scoped workflow commit dan push normal sesudah review; receipt exact dicatat saat task berikutnya. IP-M2-04 `2ea62a5324ba5f237a32092f2d2b911af6ae97fd` telah di-push dan remote hash exact diverifikasi.
 
 **Next step:** **IP-M2-05** — dashboard scoped renewal/follow-up, current draft/blocked data links, clipboard Disalin terpisah dari Mark contacted, response/verified resolution dan template governance UI. Dependency 01–04 tersedia. Sesudah 05 lanjut 06–09; tidak ada domain blocker yang memerlukan token live.
+
+
+### IP-M2-05 — Dashboard follow-up dan template
+
+**Hasil:** authenticated Inertia/API renewal overview, current/unknown/date-only expiry, shared impacted-project filtering, active/history cycle links, overdue/snooze, read-only/empty/partial scope. Follow-up detail menyediakan current draft/contact/template selector, reviewed context, blocked reason + registry link, source-version refresh, Copy dengan feedback Disalin dan review ulang bila berubah. Mark contacted form terpisah mempunyai target/body snapshot, actual sent time/manual channel/next follow-up/optional evidence dan konfirmasi; sukses mereset form. Assignee/waiting/client response/ack/claim/progress/snooze/cancel/reopen tersedia. Verification screen merekam human-reviewed provider evidence reference dalam transaksi, lalu future/later expiry/new cycle, tanpa payment-success claim; reference tidak diekspos pada detail. Closed cycle tidak menghasilkan reminder draft ready. Owner template page menyediakan syntax/schema, labelled preview dan versioned publish. Scope parsial tidak dapat membaca body/contact/history atau memutasi shared follow-up.
+
+**Pengujian:** final `RenewalDashboardTest|FollowupWorkflowTest|ClientTemplateTest` **19 passed / 214 assertions**, 41.04s MySQL `_test`; HTTP/Inertia/current draft, positive-version 409, role/scope/cross-project denial, manual start idempotency, session/CSRF middleware, reviewed-reference transaction/absence from responses, contact/renewal/template regression. Pint targeted lulus; TypeScript/Vite final build **36.43s** lulus.
+
+**Browser nyata:** Playwright CLI pada loopback `127.0.0.1:8012`, guarded `APP_ENV=testing`, MySQL `solveit_opshub_test`, no DB_URL, live gates false. H-14 ready TPL-01 → Copy Disalin (state open, attempts 0) → fictitious manual contact (contacted, attempts 1) → waiting → client-confirmed (cycle active/payment unknown) → verified provider reference/new expiry (resolved, verified cycle, ready TPL-10, attempts 1/payment unknown). Unknown TPL-04 ready dan missing service blocked/Copy disabled diperiksa. Mobile 390×844 pada unknown/blocked/templates tidak overflow (scrollWidth=390), screenshot visual ditinjau; Owner preview ready mengaktifkan publish. Console pada halaman sesudah fix **0 errors/0 warnings**. Artifact ignored: `output/playwright/m2-unknown-mobile.png`, `m2-blocked-mobile.png`; network evidence actions API 200 dan snapshot di `.playwright-cli/`. Browser/server dihentikan, port 8012 tidak listening, manifest login dihapus. Fixture dapat dibersihkan oleh disposable test migrations; runtime tidak di-reset.
+
+**Diagnosis/perbaikan:** viewer filter harus mengubah Collection menjadi array; test version0 adalah invalid input (422), diganti real stale positive version sesudah claim (409). Browser menemukan HTML pattern Unicode-v memerlukan slash/hyphen escaped, diperbaiki dan RegExp-v valid; contact form reset diuji ulang (checkbox false/manual channel kosong sesudah sukses). CLI PowerShell menghilangkan empty argument dan CLI run-code aktual membutuhkan function; mengikuti help aktual untuk JSON preview, bukan mengulangi perintah tanpa diagnosis.
+
+**Batas:** hanya fictitious browser/manual records; tidak ada pesan nyata ke client/Telegram/provider. Evidence reference berarti operator menyatakan telah memeriksa bukti di storage aman, bukan fetch/validasi provider API live. Telegram delivery/config/retries masih task 06–08; runtime migration pending, full gate M2 masih task 09. Browser safety/role assertions tidak menyatakan production/MFA provisioning atau live readiness.
+
+**Commit/push:** scoped UI/workflow commit + push normal setelah review; exact receipt dicatat task berikutnya. IP-M2-03 `4ff7c7bb6953bd282af67e7a7a6ce00241e5ee1a` telah di-push, remote exact diverifikasi.
+
+**Next step:** **IP-M2-06** — Owner bot secret reference/destination allowlist/routing/quiet hours/digest/test intent, durable scoped deliveries dan internal-header/separate plaintext renderer, bounded segmentation/rate/coalescing foundation. Dependency M0/outbox dan IP-M2-01–05 tersedia. Bot/destination live belum dikonfigurasi; native implemented + fake tested harus dipisahkan dari live-unverified. Sesudah 06 lanjut binding/webhook 07, reconciliation 08, full demo/exit gate 09; jangan masuk M3.

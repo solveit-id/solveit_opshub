@@ -37,6 +37,9 @@ export default function Authenticated({
                                     Dashboard
                                 </NavLink>
                                 {organization && (
+                                    <NavLink href={route('renewals.index', organization.id)} active={route().current('renewals.*') || route().current('followups.*') || route().current('client-templates.*')}>Renewal</NavLink>
+                                )}
+                                {organization && (
                                     <NavLink
                                         href={route('registry.page', organization.id)}
                                         active={route().current('registry.*')}
@@ -153,6 +156,9 @@ export default function Authenticated({
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        {organization && (
+                            <ResponsiveNavLink href={route('renewals.index', organization.id)} active={route().current('renewals.*') || route().current('followups.*') || route().current('client-templates.*')}>Renewal</ResponsiveNavLink>
+                        )}
                         {organization && (
                             <ResponsiveNavLink
                                 href={route('registry.page', organization.id)}
