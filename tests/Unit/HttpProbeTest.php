@@ -56,6 +56,7 @@ class HttpProbeTest extends TestCase
     public function test_redirects_rebinding_limits_and_timeout(): void
     {
         $this->assertSame('TARGET_BLOCKED', $this->probe([['status' => 302, 'location' => 'http://private.example']])->check('https://public.example')->reason);
+        $this->assertSame('TARGET_BLOCKED', $this->probe([['status' => 302, 'location' => 'https://public.example:99999']])->check('https://public.example')->reason);
         $this->assertSame('TARGET_BLOCKED', $this->probe([['peer' => '127.0.0.1']])->check('https://public.example')->reason);
         $this->assertSame('pass', $this->probe([['status' => 302, 'location' => '/next'], []])->check('https://public.example')->outcome);
         $this->assertSame('REDIRECT_LIMIT', $this->probe(array_fill(0, 6, ['status' => 302, 'location' => '/loop']))->check('https://public.example')->reason);
@@ -65,7 +66,7 @@ class HttpProbeTest extends TestCase
 
     public function test_private_reserved_and_ambiguous_targets_never_connect(): void
     {
-        foreach (['http://127.0.0.1', 'http://169.254.169.254', 'http://100.64.0.1', 'http://198.18.0.1', 'http://224.0.0.1', 'http://[::1]', 'http://[::ffff:127.0.0.1]', 'http://[2001:db8::1]', 'file:///etc/passwd', 'http://user:secret@public.example', 'http://public.example:22'] as $url) {
+        foreach (['http://127.0.0.1', 'http://169.254.169.254', 'http://100.64.0.1', 'http://198.18.0.1', 'http://192.88.99.1', 'http://224.0.0.1', 'http://[::1]', 'http://[::ffff:127.0.0.1]', 'http://[2001:db8::1]', 'http://[3fff::1]', 'file:///etc/passwd', 'http://user:secret@public.example', 'http://public.example:22'] as $url) {
             $this->assertSame('TARGET_BLOCKED', $this->probe([])->check($url)->reason, $url);
         }
     }

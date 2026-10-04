@@ -3,6 +3,11 @@
 .env
 .env.backup
 .env.production
+.env.*
+!.env.example
+/output/
+/.playwright-cli/
+/storage/app/qa-*
 .phpactor.json
 .phpunit.result.cache
 /.fleet

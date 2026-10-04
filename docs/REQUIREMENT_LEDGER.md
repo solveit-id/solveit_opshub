@@ -1,6 +1,6 @@
-# M0 Requirement Ledger
+# Solveit OpsHub Requirement Ledger
 
-**Checkpoint:** M1 registry implementation in progress
+**Checkpoint:** M1 observation implemented/tested; literal exit gate PARTIAL_WITH_BLOCKERS
 **Source:** `docs/product/PRD.md` v1.0.0; task order in `docs/planning/IMPLEMENTATION_PLAN.md`  
 **Last updated:** 4 Oktober 2026
 
@@ -48,22 +48,22 @@ The updated CI workflow provisions a disposable MySQL 8.4 service and runs the c
 
 ## M1 task checkpoint
 
-M1 is not yet at its exit gate. The following status is limited to the completed first dependency task and does not claim that public monitoring, monitoring policies, incidents, or the M1 vertical demo exist.
+M1 observation tasks are implemented and locally tested. The milestone is **PARTIAL_WITH_BLOCKERS** against its literal exit gate: full TC-03 renewal/backup/download, TC-05 delivery history and TC-07 independent watchdog require later milestones. IP-M1-10's demo is implemented/tested, while that full gate remains partial. See [M1 validation evidence](M1_VALIDATION.md) for the exact scenario matrix, browser evidence and boundaries. No M2 task was started.
 
 | Task | Status | Evidence / remaining boundary |
 |---|---|---|
 | IP-M1-01 | implemented | Scoped registry API and Inertia registry/project pages cover client/contact, project, separate environments, canonical assets, and shared usages. Mutations require `registry.manage`, are audited, reject recognizable secret-bearing values, and keep archive history. `RegistryApiTest` verifies the graph, RBAC, secret rejection, archive queue reconciliation, and rendering (5 tests, 36 assertions). |
 | IP-M1-02 | implemented | Scoped hosting account, service subscription, and management-authorization APIs record metadata, source/evidence references, precision semantics, and expiring action scope. No connector, credential value, remote action, job, or outbox event is created. `RegistryMetadataTest` verifies these boundaries (4 tests, 26 assertions). |
 | IP-M1-03 | implemented | Owner-only monitoring policy drafts publish immutable versions. Scoped project assignments record constrained overrides, and an effective-policy preview reports timezone, disabled checks, coverage gaps, and `not_configured` honestly. `MonitoringPolicyTest` verifies version isolation, override limits, coverage, and Owner gate (3 tests, 25 assertions). |
-| IP-M1-04 | implemented | Safe GET probe, DNS/IP pinning, actual-peer check, hop validation, bounded total timeout/body/redirects and opt-in content matching. `HttpProbeTest`: 3 passed, 24 assertions. Native network transport is live-unverified. |
+| IP-M1-04 | implemented | Safe GET probe, DNS/IP pinning, actual-peer check, hop validation, bounded total timeout/body/redirects and opt-in content matching. `HttpProbeTest`: 3 passed, 27 assertions after final reserved-address and malformed-redirect guard regressions. Native network transport is live-unverified. |
 | IP-M1-05 | implemented | TLS peer/hostname/chain validation and expiry thresholds; DNS A/AAAA/CNAME/MX/NS structured records and optional expected values. `TlsDnsProbeTest`: 2 passed, 27 assertions. TXT unsupported; native TLS/DNS transport live-unverified. |
 | IP-M1-06 | implemented | Append-only scoped observations with UTC chronology, fenced leases, slot uniqueness, provenance, safe evidence allowlist, freshness and capability-aware health. `ObservationTest`: 2 passed, 15 assertions. Daily aggregates and raw-retention preview preserve data; actual destructive retention remains Owner-reviewed/M4. TLS outcome normalized to PRD `warn`. |
 | IP-M1-07 | implemented | Three eligible failures/two passes, unknown streak reset, active episode uniqueness, replay dedup, structured held evidence, UTC failure/recovery times, reopen/new episode linkage and recovery-summary closure gate. Maintenance preserves samples and reevaluates alerts afterward. Four episodes test stability coalescing. `IncidentEngineTest`: 4 passed, 25 assertions. Outbox events are business facts; Telegram delivery/history guard is M2 and not claimed. |
-| IP-M1-08 | implemented | Attention overview, scoped project/asset/incident pages, text/icon states, source/freshness/fixture labels, empty and missing-permission states, acknowledge/investigate/assign/close with version and transactional idempotency. Owner-managed project access and PIC scope protect non-Owner reads and registry mutations. Browser APIs use session/CSRF middleware. Workflow+registry+policy regression: 15 passed, 134 assertions; TypeScript/Vite build passed (31.90s). Browser visual QA pending final M1 demo; tasks/client follow-ups explicitly remain M2/M4. |
+| IP-M1-08 | implemented | Attention overview, scoped project/asset/incident pages, text/icon states, source/freshness/fixture labels, empty and missing-permission states, acknowledge/investigate/assign/close with version and transactional idempotency. Owner-managed project access and PIC scope protect non-Owner reads and registry mutations. Browser APIs use session/CSRF middleware. Final local browser QA passed desktop/mobile lifecycle and elapsed freshness, with assignee/timeline/landmark/navigation repairs; authenticated cross-origin POST rejected with 419. TypeScript/Vite build passed. Tasks/client follow-ups remain M2/M4. |
 | IP-M1-09 | implemented | Durable database probe queue, canonical shared schedules, UTC leases, bounded crash reconciliation, latest-slot coalescing, missed-slot accounting and scheduler/worker/queue self-health. Archive/configuration changes preserve usage history and incident impact snapshots. Public probe gate is independent from credentialed connectors. Scheduler+registry regression: 8 passed, 64 assertions; incident/workflow/scheduler: 10 passed, 102 assertions; policy envelope regression passed. Build passed (27.89s); schedule list includes both minute jobs. Production Redis/watchdog/integrations remain not configured. |
-| IP-M1-10 | not_started | Deterministic vertical demo, concurrency and final browser/exit-gate evidence pending. |
+| IP-M1-10 | partial | Fake demo and browser recovery helper implemented/tested, test-only MySQL guards, actual two-process concurrency and migration rollback verified. Complete suite: 70 passed/386 assertions; final TLS escalation regression recorded in checkpoint. Browser desktop/mobile, stale/unknown, closure and CSRF verified. Full TC-03/05/07 gate blocked by later-milestone dependencies; no acceptance waiver or live delivery claim. |
 
-## M1 requirement evidence (IP-M1-01 scope)
+## M1 requirement evidence
 
 | Requirements | Implementation | Test | Live validation | Evidence |
 |---|---|---|---|---|
@@ -71,16 +71,21 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | REG-02 | implemented | passing | live_unverified | Project CRUD validates client scope, unique organization code, stack tags, internal PIC membership, lifecycle, criticality, and notes. |
 | REG-03 | implemented | passing | live_unverified | Production/staging/development/custom kinds are explicit; a project cannot duplicate a standard environment and asset usage validates the matching project environment. |
 | REG-04 to REG-06 | implemented | passing | live_unverified | Canonical asset kinds, responsibility, owner membership, source, verification timestamp, notes, and shared usage relation exist. No secret value is accepted in notes, identity, or source. |
-| REG-10 | partial | passing | not_required_m0 | Paused/archived project transitions cancel only future queued project/environment work and preserve history; leased/running work is left for reconciliation. Full monitor scheduling and shared-resource run semantics depend on IP-M1-03 and later. |
+| REG-10 | implemented | passing | live_unverified | Paused/archived project transitions cancel future unstarted work; canonical scheduling deactivates usages without deleting history; historical incident impact snapshots and other active shared usages survive. Leased results remain fenced and reconcile safely. |
 | REG-07 | implemented | passing | live_unverified | Hosting metadata requires a canonical hosting asset and records provider, panel, separate HTTPS API endpoint, account identifier, quota, access declarations, and per-environment roots. It does not connect to the provider. |
 | REG-08 | partial | passing | live_unverified | Subscription metadata stores billing/paying/action parties, source/evidence reference, reminder policy, billing due, and mutually exclusive instant/date/unknown expiry precision. Renewal cycle/follow-up/reminder execution remains M2. |
 | REG-09 | partial | passing | live_unverified | Project/hosting scope records allowed action classes, authorizer, evidence reference, and expiry. The authorization service refuses expired or absent classes; future connector/backup write paths must consume it in M3. |
-| CON-08 | partial | passing | not_configured | Metadata may declare `manual_only`/unknown access without offering a connector action. Provider discovery and public-monitoring fallback arrive in M1-04/M3. |
+| CON-08 | partial | passing | not_configured | Metadata may declare `manual_only`/unknown access. Independent public HTTP/TLS/DNS probes are implemented without hosting credentials. Provider discovery/credentialed capability validation remains M3. |
 | POL-01 | implemented | passing | not_required_m0 | Draft configuration is separate from immutable published `PolicyVersion`; active project assignments retain their published version when the draft changes. |
 | POL-03 | implemented | passing | not_required_m0 | Project override may only disable an existing check or lengthen its interval; it cannot add checks, make a faster schedule, or violate the M1 fixed failure/recovery and TLS thresholds. Effective preview includes applied overrides, IANA timezone, coverage, and disabled/not-configured states. |
 | SEC-02, SEC-04, SEC-11 | implemented | passing | not_required_m0 | Active organization membership and `registry.manage` gate every mutation; audit records are redacted and input rejects recognizable secret-bearing values. |
+| CON-04, MON-01/02/04/05/12, SEC-05 | implemented | passing | live_unverified | Bounded HTTP/TLS/DNS native transports, safe structured results, expected-content opt-in and per-hop pinned outbound guard; unit security negatives and fake-loop evidence. DNS TXT is unsupported. |
+| MON-03/07/08/09/10/13, JOB-09 | implemented | passing | live_unverified | UTC append-only observations, freshness/coverage-aware health, unique active episode, maintenance/stability, scoped operator lifecycle, recovery-summary closure and pending business events. Delivery-side guards remain M2. |
+| JOB-02/06, MON-14 | partial | passing | not_configured | Canonical durable database queue, fenced leases, bounded retry/coalescing, missed-slot counters and local scheduler/worker heartbeat page implemented. Independent watchdog and production Redis/deployment evidence remain M4/M5. |
+| UX-01/02/03/04/05/09 | partial | passing | live_unverified | Scoped attention/project/asset/incident/self-health browser flows validated locally, with text/icon states, timestamp/source/fake labels and permission gates. Search, client tasks and broader accessibility/load acceptance remain their later phases. |
+| MON-06 | not_started | pending | not_configured | Quota metadata supports null without fabricated percentages; credentialed resource observations and capability evaluation remain M3. |
 
-## M0 requirement evidence
+## M0 requirement evidence (historical foundation checkpoint)
 
 | Requirements | Implementation | Test | Live validation | Evidence |
 |---|---|---|---|---|
@@ -104,9 +109,9 @@ M1 is not yet at its exit gate. The following status is limited to the completed
 | NFR-06, NFR-09 | partial | passing | not_required_m0 | Durable transaction/queue and security negative tests; crash/load evidence is later. |
 | NFR-12 | partial | passing | not_required_m0 | Correlation IDs/audit/outbox fields exist; metrics dashboards are M4. |
 
-## Non-M0/M1-01 release requirements
+## Requirements outside completed M0/M1 observation scope
 
-All other P0/P1 requirements remain `not_started` with `pending` tests and `not_configured` live validation. Their explicit IDs, planned owner phase, and acceptance evidence remain in the complete matrix at `docs/planning/IMPLEMENTATION_PLAN.md` section 5. They must not be marked complete through foundation schema, registry CRUD, fake adapters, or scaffold output.
+Requirements not covered by the current M1 evidence above retain their later-phase status in `docs/planning/IMPLEMENTATION_PLAN.md` section 5. Renewal, Telegram delivery, credentialed connectors, backup/download/restore, independent watchdog and production release gates remain unfinished. The historical M0 table records the earlier foundation baseline rather than overriding current M1 evidence. No capability is marked live-validated through schema, UI, fixtures or a pending outbox event.
 
 ## M0 exit-gate statement
 

@@ -1,15 +1,166 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import MonitoringStatus from '@/Components/MonitoringStatus';
-import { Head, Link } from '@inertiajs/react';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import MonitoringStatus from "@/Components/MonitoringStatus";
+import { Head, Link } from "@inertiajs/react";
 
-type Project = { id: number; name: string; code: string; health: string; coverage: string; lifecycle: string; internal_pic_user_id: number | null; capability_gaps: Record<string, string> };
-type Incident = { id: number; state: string; severity: string; reason_code: string; environment_kind: string; impacted_projects: { id: number; name: string }[] };
-export default function Overview({ organization, projects, incidents, counts, validation }: { organization: { id: number; name: string }; projects: Project[]; incidents: Incident[]; counts: Record<string, number>; validation: string }) {
-    return <AuthenticatedLayout header={<h2 className="text-xl font-semibold">Operasional · {organization.name}</h2>}><Head title="Overview operasional" /><main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
-        <nav className="flex flex-wrap gap-6"><Link className="underline" href={route('registry.page', organization.id)}>Registry</Link><Link className="underline" href={route('monitoring.health', organization.id)}>Kesehatan OpsHub</Link></nav>
-        <p className="text-sm text-slate-600">Prioritas: kritis, perhatian, belum diketahui, sehat. PIC dan kondisi terakhir tetap dapat diperiksa dari proyek.</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{['critical', 'warning', 'unknown', 'healthy'].map(status => <div key={status} className="border border-slate-200 bg-white p-4"><MonitoringStatus value={status} /><p className="mt-3 text-3xl font-semibold">{counts[status] ?? 0}</p></div>)}</div>
-        <section aria-labelledby="attention"><h3 id="attention" className="text-lg font-semibold">Proyek yang perlu perhatian</h3>{projects.length === 0 ? <p className="mt-3 border-l-4 border-amber-400 bg-amber-50 p-4">Belum ada proyek yang dapat Anda akses. Owner dapat memberikan assignment proyek.</p> : <ul className="mt-4 divide-y border-y border-slate-200 bg-white">{projects.map(project => <li key={project.id} className="flex flex-wrap items-start justify-between gap-4 p-4"><div><Link className="font-semibold underline" href={route('registry.projects.show', [organization.id, project.id])}>{project.name}</Link><p className="mt-1 text-sm">{project.code} · {project.lifecycle} · PIC {project.internal_pic_user_id ?? 'belum ditugaskan'}</p><p className="mt-2 text-xs text-slate-600">Coverage {project.coverage} · Backup {project.capability_gaps.backup} · Internal {project.capability_gaps.application_health}</p></div><MonitoringStatus value={project.health} /></li>)}</ul>}</section>
-        <section aria-labelledby="incidents"><h3 id="incidents" className="text-lg font-semibold">Incident dan histori</h3>{incidents.length === 0 ? <p className="mt-3 text-slate-600">Belum ada incident dalam scope Anda. Ini bukan bukti seluruh pemeriksaan sehat.</p> : <ul className="mt-3 divide-y border-y bg-white">{incidents.map(incident => <li className="p-4" key={incident.id}><Link className="font-semibold underline" href={route('monitoring.incidents.show', [organization.id, incident.id])}>Incident #{incident.id} · {incident.reason_code}</Link><p className="mt-1 text-sm">{incident.severity} · {incident.state} · {incident.environment_kind} · {incident.impacted_projects.map(project => project.name).join(', ')}</p></li>)}</ul>}</section><p className="text-xs text-slate-500">{validation}</p>
-    </main></AuthenticatedLayout>;
+type Project = {
+    id: number;
+    name: string;
+    code: string;
+    health: string;
+    coverage: string;
+    lifecycle: string;
+    internal_pic_user_id: number | null;
+    capability_gaps: Record<string, string>;
+};
+type Incident = {
+    id: number;
+    state: string;
+    severity: string;
+    reason_code: string;
+    environment_kind: string;
+    impacted_projects: { id: number; name: string }[];
+};
+export default function Overview({
+    organization,
+    projects,
+    incidents,
+    counts,
+    validation,
+}: {
+    organization: { id: number; name: string };
+    projects: Project[];
+    incidents: Incident[];
+    counts: Record<string, number>;
+    validation: string;
+}) {
+    return (
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold">
+                    Operasional · {organization.name}
+                </h2>
+            }
+        >
+            <Head title="Overview operasional" />
+            <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
+                <nav className="flex flex-wrap gap-6">
+                    <Link
+                        className="underline"
+                        href={route("registry.page", organization.id)}
+                    >
+                        Registry
+                    </Link>
+                    <Link
+                        className="underline"
+                        href={route("monitoring.health", organization.id)}
+                    >
+                        Kesehatan OpsHub
+                    </Link>
+                </nav>
+                <p className="text-sm text-slate-600">
+                    Prioritas: kritis, perhatian, belum diketahui, sehat. PIC
+                    dan kondisi terakhir tetap dapat diperiksa dari proyek.
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {["critical", "warning", "unknown", "healthy"].map(
+                        (status) => (
+                            <div
+                                key={status}
+                                className="border border-slate-200 bg-white p-4"
+                            >
+                                <MonitoringStatus value={status} />
+                                <p className="mt-3 text-3xl font-semibold">
+                                    {counts[status] ?? 0}
+                                </p>
+                            </div>
+                        ),
+                    )}
+                </div>
+                <section aria-labelledby="attention">
+                    <h3 id="attention" className="text-lg font-semibold">
+                        Proyek yang perlu perhatian
+                    </h3>
+                    {projects.length === 0 ? (
+                        <p className="mt-3 border-l-4 border-amber-400 bg-amber-50 p-4">
+                            Belum ada proyek yang dapat Anda akses. Owner dapat
+                            memberikan assignment proyek.
+                        </p>
+                    ) : (
+                        <ul className="mt-4 divide-y border-y border-slate-200 bg-white">
+                            {projects.map((project) => (
+                                <li
+                                    key={project.id}
+                                    className="flex flex-wrap items-start justify-between gap-4 p-4"
+                                >
+                                    <div>
+                                        <Link
+                                            className="font-semibold underline"
+                                            href={route(
+                                                "registry.projects.show",
+                                                [organization.id, project.id],
+                                            )}
+                                        >
+                                            {project.name}
+                                        </Link>
+                                        <p className="mt-1 text-sm">
+                                            {project.code} · {project.lifecycle}{" "}
+                                            · PIC{" "}
+                                            {project.internal_pic_user_id ??
+                                                "belum ditugaskan"}
+                                        </p>
+                                        <p className="mt-2 text-xs text-slate-600">
+                                            Coverage {project.coverage} · Backup{" "}
+                                            {project.capability_gaps.backup} ·
+                                            Internal{" "}
+                                            {
+                                                project.capability_gaps
+                                                    .application_health
+                                            }
+                                        </p>
+                                    </div>
+                                    <MonitoringStatus value={project.health} />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+                <section aria-labelledby="incidents">
+                    <h3 id="incidents" className="text-lg font-semibold">
+                        Incident dan histori
+                    </h3>
+                    {incidents.length === 0 ? (
+                        <p className="mt-3 text-slate-600">
+                            Belum ada incident dalam scope Anda. Ini bukan bukti
+                            seluruh pemeriksaan sehat.
+                        </p>
+                    ) : (
+                        <ul className="mt-3 divide-y border-y bg-white">
+                            {incidents.map((incident) => (
+                                <li className="p-4" key={incident.id}>
+                                    <Link
+                                        className="font-semibold underline"
+                                        href={route(
+                                            "monitoring.incidents.show",
+                                            [organization.id, incident.id],
+                                        )}
+                                    >
+                                        Incident #{incident.id} ·{" "}
+                                        {incident.reason_code}
+                                    </Link>
+                                    <p className="mt-1 text-sm">
+                                        {incident.severity} · {incident.state} ·{" "}
+                                        {incident.environment_kind} ·{" "}
+                                        {incident.impacted_projects
+                                            .map((project) => project.name)
+                                            .join(", ")}
+                                    </p>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+                <p className="text-xs text-slate-500">{validation}</p>
+            </div>
+        </AuthenticatedLayout>
+    );
 }

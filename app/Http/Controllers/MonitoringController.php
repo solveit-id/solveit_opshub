@@ -30,7 +30,7 @@ class MonitoringController extends Controller
         $projects = $this->access->query($request->user(), $organization)->get()->map(fn ($project) => [...$project->only(['id', 'name', 'code', 'lifecycle', 'internal_pic_user_id']), ...$this->health->project($project)]);
         $projects = $projects->sortBy(fn ($project) => [array_search($project['health'], ['critical', 'warning', 'unknown', 'healthy']), $project['name']])->values();
         $ids = $projects->pluck('id');
-        $incidents = Incident::forOrganization($organization)->whereHas('projects', fn ($query) => $query->whereIn('projects.id', $ids))->orderByRaw("CASE severity WHEN 'critical' THEN 0 ELSE 1 END")->orderBy('confirmed_down_at')->get()->map(fn ($incident) => $this->incidentData($request, $organization, $incident, false));
+        $incidents = Incident::forOrganization($organization)->whereHas('projects', fn ($query) => $query->whereIn('projects.id', $ids))->orderByRaw("CASE state WHEN 'closed' THEN 2 WHEN 'resolved' THEN 1 ELSE 0 END")->orderByRaw("CASE severity WHEN 'critical' THEN 0 ELSE 1 END")->orderBy('confirmed_down_at')->get()->map(fn ($incident) => $this->incidentData($request, $organization, $incident, false));
         $data = ['organization' => $organization->only(['id', 'name', 'timezone']), 'projects' => $projects, 'incidents' => $incidents, 'counts' => $projects->countBy('health'), 'validation' => 'Live monitoring belum diverifikasi; evidence fake selalu diberi label.'];
 
         return $request->is('api/*') ? response()->json(['data' => $data]) : Inertia::render('Monitoring/Overview', $data);
@@ -47,7 +47,7 @@ class MonitoringController extends Controller
     {
         $this->access->requireIncident($request->user(), $organization, $incident);
         $data = ['organization' => $organization->only(['id', 'name', 'timezone']), 'incident' => $this->incidentData($request, $organization, $incident, true), 'canManage' => $this->canManage($request, $organization, $incident),
-            'assignees' => Membership::where('organization_id', $organization->id)->where('is_active', true)->whereHas('user', fn ($query) => $query->where('is_active', true))->with('user:id,name')->get()->filter(fn ($membership) => $membership->role->can('incident.manage') && $incident->projects()->get()->every(fn ($project) => $this->access->query($membership->user, $organization)->whereKey($project->id)->exists()))->map(fn ($membership) => $membership->user->only(['id', 'name']))->values()];
+            'assignees' => Membership::where('organization_id', $organization->id)->where('is_active', true)->whereHas('user', fn ($query) => $query->where('is_active', true))->with('user:id,name,is_active')->get()->filter(fn ($membership) => $membership->role->can('incident.manage') && $incident->projects()->get()->every(fn ($project) => $this->access->query($membership->user, $organization)->whereKey($project->id)->exists()))->map(fn ($membership) => $membership->user->only(['id', 'name']))->values()];
 
         return $request->is('api/*') ? response()->json(['data' => $data]) : Inertia::render('Monitoring/Incident', $data);
     }

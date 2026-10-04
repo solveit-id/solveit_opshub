@@ -20,6 +20,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('policy_assignments', function (Blueprint $table): void {
+            // InnoDB may replace the original FK index with the active-scope index on upgrade.
+            $table->index('organization_id', 'pa_org_fk_idx');
             $table->dropIndex('policy_assignment_active_scope');
             $table->dropColumn('is_active');
         });

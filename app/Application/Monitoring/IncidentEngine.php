@@ -58,6 +58,9 @@ class IncidentEngine
                             'confirmed_recovered_at' => null, 'first_recovery_sample_at' => null, 'acknowledged_at' => null, 'alert_pending' => true]);
                         $confirmed = true;
                     }
+                    if ($incident->severity === 'warning' && $observation->outcome === 'fail') {
+                        $incident->alert_pending = true;
+                    }
                     $incident->fill(['last_failed_at' => $observation->completed_at, 'reason_code' => $observation->reason_code, 'severity' => $observation->outcome === 'warn' ? 'warning' : 'critical', 'version' => $incident->version + 1]);
                     $incident->save();
                     if ($confirmed) {
@@ -123,7 +126,7 @@ class IncidentEngine
     private function event(Incident $incident, string $type, array $extra): void
     {
         app(OutboxWriter::class)->record(Organization::findOrFail($incident->organization_id), $type, 'incident', $incident->id, $incident->version, [
-            'incident_id' => $incident->id, 'monitor_id' => $incident->monitor_id, 'environment_kind' => $incident->monitor->environment_kind,
+            'incident_id' => $incident->id, 'monitor_id' => $incident->monitor_id, 'environment_kind' => $incident->monitor->environment_kind, 'severity' => $incident->severity,
             'impacted_project_ids' => $incident->projects()->pluck('projects.id')->all(), ...$extra,
         ]);
     }

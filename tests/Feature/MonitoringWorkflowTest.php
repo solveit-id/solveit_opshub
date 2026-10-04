@@ -52,6 +52,7 @@ class MonitoringWorkflowTest extends TestCase
         $this->getJson($base)->assertOk()->assertJsonPath('data.canManage', false);
         $this->postJson($base.'/acknowledge', ['version' => $incident->version], ['Idempotency-Key' => 'request-key-1'])->assertForbidden();
         $this->actingAs($owner);
+        $this->getJson($base)->assertOk()->assertJsonPath('data.assignees.0.id', $owner->id);
         $payload = ['version' => $incident->version];
         $this->postJson($base.'/acknowledge', $payload, ['Idempotency-Key' => 'request-key-1'])->assertOk()->assertJsonPath('data.state', 'acknowledged');
         $this->postJson($base.'/acknowledge', $payload, ['Idempotency-Key' => 'request-key-1'])->assertOk();

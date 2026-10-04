@@ -64,6 +64,21 @@ class IncidentEngineTest extends TestCase
         $this->assertDatabaseCount('outbox_events', 1);
     }
 
+    public function test_tls_warning_escalates_once_without_duplicating_the_episode(): void
+    {
+        [, , $monitor] = $this->graph();
+        $monitor->update(['kind' => 'tls']);
+        $at = CarbonImmutable::parse('2026-10-04T00:00:00Z');
+        $this->sample($monitor, $at, 'warn');
+        $this->assertSame('warning', Incident::sole()->severity);
+        $this->sample($monitor, $at->addMinute(), 'fail');
+        $this->assertSame('critical', Incident::sole()->severity);
+        $this->assertDatabaseCount('incidents', 1);
+        $this->assertSame(['warning', 'critical'], OutboxEvent::orderBy('id')->get()->pluck('payload.severity')->all());
+        $this->sample($monitor, $at->addMinutes(2), 'fail');
+        $this->assertDatabaseCount('outbox_events', 2);
+    }
+
     public function test_three_episodes_in_thirty_minutes_coalesce_to_stability_warning(): void
     {
         [, , $monitor] = $this->graph();

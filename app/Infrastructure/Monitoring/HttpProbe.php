@@ -52,7 +52,7 @@ class HttpProbe
                     'redirect_statuses' => $statuses, 'content_check' => $matched === null ? 'not_configured' : ($matched ? 'match' : 'mismatch'),
                 ]);
             }
-        } catch (DomainException) {
+        } catch (DomainException|\InvalidArgumentException) {
             return new ProbeResult('unknown', 'TARGET_BLOCKED');
         } catch (ProbeTransportException $exception) {
             return new ProbeResult('fail', $exception->getMessage());

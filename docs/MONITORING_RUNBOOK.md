@@ -31,3 +31,11 @@ Daily aggregation is available through `ObservationRetention`; raw HTTP retentio
 ## Validation boundary
 
 M1 automated evidence uses dedicated MySQL `_test` databases and explicitly labelled fake results. Native probes are implemented, not live-validated against a client/provider. Pilot performance, production queue infrastructure, independent watchdog, hosting connectors, backups and Telegram delivery remain unverified/configuration work for their approved milestones.
+
+## Isolated vertical demo
+
+Use an already provisioned disposable MySQL test schema only. In PowerShell set process-local `APP_ENV=testing`, `DB_DATABASE=solveit_opshub_test`, and empty `DB_URL`, verify with `php artisan opshub:database:check`, then run `php artisan opshub:monitoring:demo`. The command refuses a non-testing environment, a non-MySQL connection, a schema without `_test`, or a connection URL before writing. It does not reset the database. All observations are explicitly fake and native execution stays disabled.
+
+`--browser` adds a linked open episode and writes a random disposable login to ignored `storage/app/qa-m1-login.json`. Run a separate test-only HTTP server/session cookie, build assets, and use that fixture to exercise operator actions. `--recover={organization_id}` accepts only fictitious fake-only demo records in that same isolated test environment; it runs two fake successes through the real scheduler/job services. Never use either helper for runtime records or substitute synthetic data into a production coverage gap.
+
+After QA stop the temporary browser/server, delete that exact login manifest, and reset the disposable schema through the project's guarded test suite. Preserve persistent runtime data. Detailed M1 scenario evidence and unresolved cross-milestone exit assertions are in [M1_VALIDATION.md](M1_VALIDATION.md).
