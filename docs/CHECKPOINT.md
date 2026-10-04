@@ -4,7 +4,7 @@
 
 **Status milestone terakhir:** M2 — `MILESTONE_READY` untuk gate engineering lokal/fake sesuai ADR-0006; Internal v1 dan integrasi production belum ready.
 
-**Milestone/task aktif:** M2 selesai pada exit gate lokal/fake; `IP-M2-09` implemented/tested. Berhenti sebelum M3; commit/push dan CI exact dicatat pada receipt di bawah. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
+**Milestone/task aktif:** M2 selesai pada exit gate lokal/fake; `IP-M2-09` implemented/tested/pushed, CI exact passed. Berhenti sebelum M3; commit/push dan CI exact dicatat pada receipt di bawah. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
 
 **Task terakhir:** `IP-M2-09` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
 
@@ -668,6 +668,6 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 
 **Gate/status:** TC-11–25/38 dan allocated TC-03/05/10 memenuhi gate M2 lokal/fake; seluruh task 01–09 implemented/tested, status **MILESTONE_READY**. Native Telegram adapter implemented tetapi **live-unverified**: tidak ada bot/token/destination/webhook production dikonfigurasi atau diuji. Backup/maintenance digest yang membutuhkan M3 tetap unsupported pada fase ini; Redis durability, independent watchdog/provisioning dan Internal v1 mengikuti M3–M5. Tidak ada waiver full TC/PRD.
 
-**Commit/push:** task 09 siap untuk scoped commit pada `main` → `origin/main`; hash, outgoing review, normal push/remote exact dan hasil CI dicatat setelah operasi selesai. Task 08 exact receipt `c765de0cf5f08ce7b130da3cfd598295d610b748` sudah pushed; failure CI lama diperbaiki oleh fixture task 09. Tidak ada blocker implementasi lokal/fake; CI exact task 09 masih menunggu push/run pada titik checkpoint ini.
+**Commit/push:** task 09 `cd85988b7f9e435c12b07bfe70905fadc4f777b0`, `(test) verify M2 renewal loop and MySQL delivery concurrency`, sudah normal-pushed dari `main` ke `origin/main`; `git ls-remote` exact dan working tree bersih diverifikasi setelah push. Outgoing hanya satu scoped task commit, 12 file; cached names/stat/check dan isi diperiksa, tanpa secret/QA artifact/attribution trailer. Task 08 exact receipt `c765de0cf5f08ce7b130da3cfd598295d610b748` sudah pushed; failure CI lama diperbaiki oleh fixture task 09. Pint seluruh PHP, Composer strict, `git diff --check`/cached check dan validasi 52 task outputs/6 exit gates/6 acceptance blocks/11 Markdown/96 links-anchor/PRD unchanged passed. CI exact task 09 [37216248860](https://github.com/solveit-id/solveit_opshub/actions/runs/37216248860) **completed/success**: frontend build, MySQL application tests dan Pint masing-masing passed; `head_sha` cocok `cd85988b7f9e435c12b07bfe70905fadc4f777b0`. Receipt dokumentasi ini mencatat hasil setelah push/CI dan tidak mengubah implementasi. Tidak ada blocker M2 lokal/fake; batas live tetap berlaku.
 
 **Next step konkret:** **IP-M3-01** — definisikan typed connector contract/capability assessment dan persistence, memakai canonical account/resource scope, auth/security/outbox M0–M2. Dependency engineering lokal tersedia; pengembangan M3 menunggu instruksi lanjutan sesuai stop boundary. Live connector memerlukan konfigurasi/target dan otorisasi terpisah. Tidak ada task M3 yang dimulai.
