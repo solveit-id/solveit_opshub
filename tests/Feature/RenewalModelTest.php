@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Application\ClientTemplates\DraftGenerator;
 use App\Application\RenewalFollowups\Expiry;
 use App\Application\RenewalFollowups\SubscriptionRegistry;
 use App\Models\Asset;
@@ -59,11 +60,14 @@ class RenewalModelTest extends TestCase
 
     public function test_contact_history_is_append_only_and_overdue_is_derived(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-10-04T03:00:00Z'));
         [$org, $owner, $service, , $contact] = $this->renewalGraph();
         $followup = ClientFollowup::create(['organization_id' => $org->id, 'renewal_cycle_id' => $service->cycles()->sole()->id, 'state' => 'waiting_client', 'next_followup_at' => '2026-10-04 00:00:00']);
         $this->assertTrue($followup->overdue(CarbonImmutable::parse('2026-10-04T01:00:00Z')));
         $this->assertSame('waiting_client', $followup->state);
-        $attempt = ContactAttempt::create(['organization_id' => $org->id, 'client_followup_id' => $followup->id, 'actor_user_id' => $owner->id, 'contact_id' => $contact->id, 'sent_at' => now(), 'manual_channel' => 'manual', 'template_draft_id' => 1, 'draft_version' => 1, 'sent_body' => 'Fixture historical body', 'recorded_at' => now()]);
+        $draft = app(DraftGenerator::class)->generate($org, $followup, actor: $owner);
+        $this->assertSame('ready', $draft->draft_status);
+        $attempt = ContactAttempt::create(['organization_id' => $org->id, 'client_followup_id' => $followup->id, 'actor_user_id' => $owner->id, 'contact_id' => $contact->id, 'sent_at' => now(), 'manual_channel' => 'manual', 'template_draft_id' => $draft->id, 'draft_version' => $draft->template_version, 'sent_body' => $draft->rendered_body, 'recorded_at' => now()]);
         $this->expectException(LogicException::class);
         $attempt->update(['sent_body' => 'Rewritten']);
     }

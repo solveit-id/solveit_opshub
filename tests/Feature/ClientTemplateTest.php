@@ -62,6 +62,19 @@ class ClientTemplateTest extends TestCase
         $this->assertSame(1, TemplateDraft::count());
     }
 
+    public function test_every_template_mandatory_variable_blocks_a_missing_value(): void
+    {
+        foreach (app(TemplateCatalog::class)->definitions() as $key => $definition) {
+            foreach ($definition['mandatory_variables'] as $mandatory) {
+                $variables = array_fill_keys(TemplateCatalog::VARIABLES, 'Fictitious valid value');
+                $variables[$mandatory] = null;
+                $result = app(PlaintextRenderer::class)->render($definition['body'], $variables, $definition['mandatory_variables']);
+                $this->assertSame('blocked_missing_data', $result['status'], $key.': '.$mandatory);
+                $this->assertContains($mandatory, $result['missing']);
+            }
+        }
+    }
+
     public function test_unknown_and_missing_contact_are_honest_and_cannot_fake_verified_closure(): void
     {
         [$org, $owner, $service, $project, $contact] = $this->renewalGraph(['date_precision' => 'unknown', 'expiry_date' => null, 'source_timezone' => null]);

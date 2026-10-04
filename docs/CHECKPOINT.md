@@ -2,11 +2,11 @@
 
 **Diperbarui:** 4 Oktober 2026
 
-**Status milestone terakhir:** M1 — `MILESTONE_READY` dalam scope engineering lokal yang disetujui Owner; Internal v1 belum ready.
+**Status milestone terakhir:** M2 — `MILESTONE_READY` untuk gate engineering lokal/fake sesuai ADR-0006; Internal v1 dan integrasi production belum ready.
 
-**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-09` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
+**Milestone/task aktif:** M2 selesai pada exit gate lokal/fake; `IP-M2-09` implemented/tested. Berhenti sebelum M3; commit/push dan CI exact dicatat pada receipt di bawah. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
 
-**Task terakhir:** `IP-M2-08` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
+**Task terakhir:** `IP-M2-09` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -35,7 +35,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 |---|---|---|---|
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
-| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 03, 04, 05, 06, 07, 08 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-09; dependency dan bukti di bagian 10. |
+| M2 — Telegram/renewal/client loop | IP-M2-01–09 implemented/tested. | `MILESTONE_READY` lokal/fake; bukan integrasi production. | Tidak ada implementasi M2 tersisa; receipt CI/push di bagian 10. IP-M3-01 menunggu instruksi lanjutan. |
 | M3 — Connector dan verified backup | Belum dimulai. | Belum dievaluasi. | Dependency canonical account, authorization, notification dan sandbox. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
@@ -504,7 +504,7 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 | IP-M2-06 | implemented/tested | Telegram config/destination/outbox/domain/renderer. |
 | IP-M2-07 | implemented/tested | Binding/webhook/commands/constrained callbacks. |
 | IP-M2-08 | implemented/tested | 29 tests/319 assertions; reconciliation, retries, current digest, findings/privacy/priority. Native live-unverified; receipt di bawah. |
-| IP-M2-09 | not_started | Full demo/TC-11–25/38 plus allocated TC-03/05/10 assertions dan exit gate. |
+| IP-M2-09 | implemented/tested | Full suite 132 tests/1142 assertions; HTTP demo + race MySQL, 10 template mandatory coverage dan browser nyata desktop/mobile passed. Live Telegram unverified; receipt di bawah. |
 
 ### IP-M2-01 — Model renewal dan follow-up
 
@@ -626,3 +626,48 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 **Next step:** **IP-M2-09** — full fake H-14→TPL-01→Copy→actual manual contact→waiting/client-confirmed→provider evidence/future expiry→verified/new cycle; security/binding/replay/long Unicode/retry storm, TC-11–25/38 dan allocated TC-03/05/10 evidence, full mandatory checks. Dependency 01–08 tersedia. Live bot tidak diperlukan untuk fake/sandbox gate; production tetap live-unverified. Stop sesudah gate M2; jangan masuk M3.
 
 **Runbook M2 lokal:** scheduler `php artisan schedule:work`; consumer `php artisan queue:work database --queue=critical,notification,probe,routine,backup --tries=1` (atau `composer dev` untuk worker/web/Vite). `php artisan opshub:telegram:dispatch` hanya reconcile/enqueue, bukan bukti sent. Konfigurasi Owner + identity test + explicit destination scope/test wajib; live gates default false. Periksa dashboard delivery/finding, jangan menganggap outbox materialized/queue insertion sebagai provider acceptance. Pada unknown periksa chat/event ID sebelum manual resend. Jangan menjalankan queue live tanpa target/config terotorisasi.
+
+### IP-M2-09 — Riwayat diagnosis gate (sebelum validasi final)
+
+**Commit/push task 08:** `c765de0cf5f08ce7b130da3cfd598295d610b748`, `(feat) reconcile Telegram delivery with bounded retries and current digests`; normal push `origin/main` berhasil dan remote exact diverifikasi. Build 08 final 33.35s/Pint/Composer/docs passed. Working tree 09 berisi demo HTTP, race worker/test, mandatory-variable coverage dan mobile notification link; belum committed.
+
+**Bukti sementara:** `RenewalTelegramDemoTest|TelegramConcurrencyTest` **2 passed / 78 assertions**, 67.89s. Full H-14/TPL-01/separate Telegram header/body/private binding/dashboard confirmation/contact/wait/client-confirmed/provider proof/TPL-10/new cycle/replay/forged webhook diuji. Race dua proses MySQL membuktikan satu active threshold/follow-up/outbox, satu attempt sent, satu verify dan satu 409/two cycles dengan satu active. Initial demo helper memilih tombol URL alih-alih callback dan expected replay code tidak sesuai `CALLBACK_ALREADY_USED`; diperbaiki berdasarkan protocol/source. Initial race count memasukkan dua historical skipped reminder; assertions kini membuktikan tiga persisted rows (dua skipped + satu pending), satu outbox, tanpa historical flood.
+
+**Runtime:** read-only preflight MySQL 8.4.11 `solveit_opshub`, users/org/outbox/service/incident 0, dua live gates false. Keenam migration M2 kemudian applied normal `php artisan migrate --force`; `composer db:check` passed. Runtime tidak di-reset; `_test` tetap terpisah. Full `composer test` sedang berjalan, browser belum dimulai.
+
+**CI/blocker sementara:** exact task 08 run [37213005803](https://github.com/solveit-id/solveit_opshub/actions/runs/37213005803) failed di application tests, build passed/Pint skipped; public job-log endpoint 403 dan annotations hanya exit code 2. Automatic approval review menolak penggunaan configured Git credential untuk API log (credential probing); action tidak dieksekusi, izin baca log privat diminta. Diagnosis lokal/full suite dan pekerjaan independen tetap berjalan. Status M2 belum ready; next step tetap IP-M2-09: selesaikan full gate/browser dan diagnosis CI, commit/push scoped tanpa masuk M3.
+
+
+### IP-M2-09 — Hasil final dan exit gate M2
+
+**Hasil:** demo HTTP lengkap H-14 → ready TPL-01 → pesan internal terpisah/plaintext client → actual manual contact → waiting/client-confirmed → reviewed provider evidence + expiry future/later → verified/new cycle/TPL-10. Client confirmation tetap unresolved/payment unknown; historic sent body immutable. Test dua proses MySQL nyata membuktikan satu reminder aktif/outbox/follow-up, satu materialization, satu sent attempt, dan verify berkonflik 409 dengan tepat satu active cycle. Mandatory variable pada setiap definisi TPL-01…10 diuji satu per satu. Browser gate memperbaiki tiga duplicate main landmarks dan menambahkan akses Notification delivery pada navigasi mobile.
+
+**Pemulihan CI:** Owner mengizinkan membaca log CI. Pembatasan akses sebelumnya telah terselesaikan; log exact task 08 menunjukkan fixture `RenewalModelTest` memakai `template_draft_id=1` tanpa draft nyata setelah FK task 04 ditambahkan. Full suite lokal mereproduksi error yang sama (1 failed/131 passed). Fixture kini membuat ready draft melalui `DraftGenerator` dan menggunakan ID/version/body aktual; invariant FK dan append-only tetap dipertahankan. Tidak ada test dinonaktifkan atau acceptance dikurangi.
+
+**Pengujian final:** full `php artisan test` **132 passed / 1142 assertions**, 167.35s; build TypeScript/Vite melalui `composer test` passed sebelum diagnosis FK, kemudian build final sesudah perubahan landmark passed (1025 modules). Targeted demo/race **2 passed / 78 assertions**, 67.89s; `RenewalModelTest` ulang **6 passed / 26 assertions**, 31.31s, sekaligus cleanup disposable QA DB. Pint, Composer strict, diff/link/reference/acceptance integrity diperiksa sebelum commit; receipt mencatat hasil final dan CI exact.
+
+| Gate/TC | Bukti actual dalam suite penuh dan browser |
+|---|---|
+| TC-11/12/17 dan allocated TC-03 | `RenewalSchedulerTest`, `RenewalTelegramDemoTest`, `TelegramConcurrencyTest`: kalender/timezone, highest applicable threshold, skipped history, shared canonical reminder, bounded escalation/snooze dan race uniqueness. |
+| TC-13 | `ClientTemplateTest`, `RenewalDashboardTest` dan browser: unknown expiry ready TPL-04 jika data cukup; missing data blocked, tanpa tanggal rekaan. |
+| TC-14 | Demo HTTP/delivery renderer: internal header terpisah dari body client plaintext; actual fake destination internal, tanpa client auto-send. |
+| TC-15 | Browser nyata Copy/clipboard tetap open/0 attempts; form Mark contacted menghasilkan satu actual auditable attempt; `FollowupWorkflowTest` menjaga actor/contact/time/channel/draft version. |
+| TC-16/38 | Workflow/demo/race: confirmation/payment tidak verify, reviewed future/later expiry wajib, stale version 409, satu active cycle, cancellation old reminders dan immutable history. |
+| TC-18 | `ClientTemplateTest`/receiver: version/publication, stale/superseded draft dan callback current-source/replay guards. |
+| TC-19 | Template/delivery tests: optional clauses, mandatory variables semua 10 template, secret/markup rejection, Unicode dan bounded UTF-16 segmentation. |
+| TC-20–22 | `TelegramReceiverTest`/HTTP demo: private one-time intent + same-user dashboard confirmation, forged-secret rejection, durable update dedup, scoped/RBAC/constrained callback dan replay refusal. |
+| TC-23 | `TelegramReconciliationTest`/delivery tests: bounded 429/5xx retry, 401/403 disable, timeout/crash uncertainty, lease fencing, explicit successful repair test dan failed-history retention. Browser acknowledge tidak mengubah degraded menjadi healthy. |
+| TC-24 dan allocated TC-10 | Reconciliation/delivery storm 100 incidents → satu coalesced destination delivery, current summary/history, rate caps, critical priority, quiet hours dan digest. |
+| TC-25 dan allocated TC-05 | Deterministic M1 incident/delivery history: per-destination/per-episode recovery hanya setelah down sent, unsent destination menerima recovered-summary, obsolete down tidak dikirim ulang. |
+
+**Browser nyata:** Chrome di loopback, backend MySQL `_test` dengan adapter fake eksplisit/guarded. Copy clipboard, actual manual contact, waiting/client-confirmed, verified resolution/TPL-10, Owner identity/test pending→fake accepted, private binding candidate→typed-ID/dashboard confirmation, degraded 403 finding→acknowledged (tetap degraded) berhasil melalui API/Inertia aktual. Enam halaman pada desktop 1280×844 dan mobile 390×844: 12 pengukuran, tepat satu main/halaman, tanpa horizontal overflow; console 0 errors/0 warnings. Screenshot lokal ignored, bukan evidence Telegram live.
+
+**Runtime/cleanup:** keenam migration M2 applied normal; MySQL 8.4.11 runtime tetap terpisah, 17 migration applied, users/org/outbox/service/incident 0 setelah QA, kedua live gates false. Browser ditutup dan PHP QA server dihentikan (port 8012 tidak listening). Manifest/random login helper dihapus. Guarded `_test` cleanup check: users/org/service/incident/outbox/delivery/binding/receipt/jobs/session semuanya 0. Tidak ada perubahan `.env`, runtime reset, atau worker/scheduler live.
+
+**Runbook demo ulang:** `php artisan test --filter=RenewalTelegramDemoTest` untuk fake HTTP vertical flow; `php artisan test --filter=TelegramConcurrencyTest` untuk race MySQL nyata. Keduanya memakai guard testing/MySQL/schema `_test`/DB_URL kosong/live disabled, dan destructive migration hanya mengenai disposable test schema. Build manifest harus tersedia sebelum HTTP tests. Browser QA memerlukan fixture fictitious + fake transport eksplisit dan cleanup setelahnya; tidak menggunakan fallback production.
+
+**Gate/status:** TC-11–25/38 dan allocated TC-03/05/10 memenuhi gate M2 lokal/fake; seluruh task 01–09 implemented/tested, status **MILESTONE_READY**. Native Telegram adapter implemented tetapi **live-unverified**: tidak ada bot/token/destination/webhook production dikonfigurasi atau diuji. Backup/maintenance digest yang membutuhkan M3 tetap unsupported pada fase ini; Redis durability, independent watchdog/provisioning dan Internal v1 mengikuti M3–M5. Tidak ada waiver full TC/PRD.
+
+**Commit/push:** task 09 siap untuk scoped commit pada `main` → `origin/main`; hash, outgoing review, normal push/remote exact dan hasil CI dicatat setelah operasi selesai. Task 08 exact receipt `c765de0cf5f08ce7b130da3cfd598295d610b748` sudah pushed; failure CI lama diperbaiki oleh fixture task 09. Tidak ada blocker implementasi lokal/fake; CI exact task 09 masih menunggu push/run pada titik checkpoint ini.
+
+**Next step konkret:** **IP-M3-01** — definisikan typed connector contract/capability assessment dan persistence, memakai canonical account/resource scope, auth/security/outbox M0–M2. Dependency engineering lokal tersedia; pengembangan M3 menunggu instruksi lanjutan sesuai stop boundary. Live connector memerlukan konfigurasi/target dan otorisasi terpisah. Tidak ada task M3 yang dimulai.

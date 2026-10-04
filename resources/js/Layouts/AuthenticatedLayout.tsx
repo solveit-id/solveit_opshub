@@ -176,6 +176,7 @@ export default function Authenticated({
 
                         <div className="border-t border-gray-200 pb-1 pt-4">
                             {organization && <ResponsiveNavLink href={route('telegram.binding', organization.id)}>Telegram pribadi</ResponsiveNavLink>}
+                            {organization && <ResponsiveNavLink href={route('notifications.index', organization.id)}>Notification delivery</ResponsiveNavLink>}
                         <div className="px-4">
                             <div className="text-base font-medium text-gray-800">
                                 {user.name}

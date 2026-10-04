@@ -21,7 +21,7 @@ export default function Settings({ organization, bot, destinations, projects, me
     const saveBot = (e: FormEvent) => { e.preventDefault(); void run(async () => { await axios.put(`${base}/bot`, { ...configuration, version: bot?.version ?? 0 }); setMessage('Konfigurasi disimpan. Test identity dilakukan terpisah.'); }); };
     const saveDestination = (e: FormEvent) => { e.preventDefault(); void run(async () => { const data = { ...destination, member_user_id: destination.member_user_id ? Number(destination.member_user_id) : null }; await (destination.id ? axios.patch(`${base}/destinations/${destination.id}`, data) : axios.post(`${base}/destinations`, data)); setDestination(empty); setMessage('Allowlist dan scope destination disimpan.'); }); };
     const field = 'mt-1 w-full rounded border-gray-300';
-    return <AuthenticatedLayout header={<h1 className="text-xl font-semibold">Telegram · {organization.name}</h1>}><Head title="Telegram" /><main className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    return <AuthenticatedLayout header={<h1 className="text-xl font-semibold">Telegram · {organization.name}</h1>}><Head title="Telegram" /><div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
         <p>Owner mengelola allowlist. Pastikan seluruh anggota grup berhak membaca scope yang dipilih. Bot tidak memeriksa keanggotaan pembaca grup.</p>
         <p>{liveEnabled ? 'Live connector gate aktif; setiap test merupakan tindakan eksplisit.' : 'Live connector dinonaktifkan. Menyimpan konfigurasi tidak mengirim pesan.'} {bot?.identity_fake && 'Identity berasal dari FAKE TESTING.'}</p>
         <Link className="text-blue-700 underline" href={route('password.confirm')}>Konfirmasikan password sebelum perubahan atau test (10 menit)</Link>
@@ -45,5 +45,5 @@ export default function Settings({ organization, bot, destinations, projects, me
             {(['owner_route', 'enabled', 'scope_confirmed'] as const).map(key => <label key={key} className="flex gap-2"><input type="checkbox" required={key === 'scope_confirmed'} checked={destination[key]} onChange={e => setDestination({ ...destination, [key]: e.target.checked })} />{({ owner_route: 'Terima eskalasi Owner', enabled: 'Enable destination', scope_confirmed: 'Saya memastikan seluruh anggota chat berhak membaca scope ini' })[key]}</label>)}
             <button disabled={busy} className="rounded bg-gray-800 px-4 py-2 text-white">Simpan destination</button>
         </form>}
-    </main></AuthenticatedLayout>;
+    </div></AuthenticatedLayout>;
 }
