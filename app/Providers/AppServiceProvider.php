@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Infrastructure\Backup\BackupCapacity;
+use App\Infrastructure\Backup\UnavailableBackupCapacity;
 use App\Infrastructure\Connectors\ConnectorSecretResolver;
 use App\Infrastructure\Connectors\Cpanel\CpanelTransport;
 use App\Infrastructure\Connectors\Cpanel\NativeCpanelTransport;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(BackupCapacity::class, UnavailableBackupCapacity::class);
         $this->app->bind(ConnectorSecretResolver::class, EnvironmentConnectorSecrets::class);
         $this->app->bind(CpanelTransport::class, NativeCpanelTransport::class);
         $this->app->bind(SftpSessionFactory::class, NativeSftpSessionFactory::class);
