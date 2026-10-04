@@ -1,6 +1,8 @@
 <?php
 
+use App\Application\RenewalFollowups\FollowupWorkflow;
 use App\Http\Controllers\ClientTemplateController;
+use App\Http\Controllers\FollowupController;
 use App\Http\Controllers\FoundationOrganizationController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\MonitoringPolicyController;
@@ -11,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 
 // Dashboard APIs share the browser session and enforce CSRF on every mutation.
 Route::middleware('web')->group(function (): void {
+    Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])
+        ->post('/v1/organizations/{organization}/follow-ups/{followup}/{action}', [FollowupController::class, 'action'])
+        ->whereIn('action', [...FollowupWorkflow::ACTIONS, 'snooze']);
     Route::middleware(['auth', 'active.user', 'organization.access:organization.read'])
         ->prefix('/v1/organizations/{organization}/client-templates')->group(function (): void {
             Route::get('/', [ClientTemplateController::class, 'index']);

@@ -4,9 +4,9 @@
 
 **Status milestone terakhir:** M1 — `MILESTONE_READY` dalam scope engineering lokal yang disetujui Owner; Internal v1 belum ready.
 
-**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-03` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
+**Milestone/task aktif:** M2 — `PARTIAL_WITH_BLOCKERS`; `IP-M2-05` berikutnya. [Progres dan evidence M2](#10-progres-m2--telegram-renewal-dan-client-action-loop).
 
-**Task terakhir:** `IP-M2-04` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
+**Task terakhir:** `IP-M2-03` — implemented/tested; scope M2 tanpa aktivasi integrasi live.
 
 **Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
@@ -35,7 +35,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 |---|---|---|---|
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
 | M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
-| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 04 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-03; dependency dan bukti di bagian 10. |
+| M2 — Telegram/renewal/client loop | IP-M2-01, 02, 03, 04 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. | IP-M2-05; dependency dan bukti di bagian 10. |
 | M3 — Connector dan verified backup | Belum dimulai. | Belum dievaluasi. | Dependency canonical account, authorization, notification dan sandbox. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
@@ -498,7 +498,7 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 |---|---|---|
 | IP-M2-01 | implemented/tested | Expiry/source/date precision, billing/payment terpisah; canonical subscription dan unique active cycle/primary follow-up; append-only contact model, derived overdue dan metadata version/409. |
 | IP-M2-02 | implemented/tested | Calendar thresholds, skipped history/shared canonical events, bounded escalation dan reasoned expiring snooze/pause. |
-| IP-M2-03 | not_started | Follow-up/contact/response/renewal verification workflow. |
+| IP-M2-03 | implemented/tested | Follow-up/contact/response/renewal verification workflow. |
 | IP-M2-04 | implemented/tested | Sepuluh versioned templates, mandatory-variable validation dan deterministic drafts. |
 | IP-M2-05 | not_started | Dashboard Copy/Mark contacted/current draft/verified resolution. |
 | IP-M2-06 | not_started | Telegram config/destination/outbox/domain/renderer. |
@@ -543,3 +543,16 @@ Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan ne
 **Commit/push:** scoped task commit/push biasa sesudah review; receipt exact dicatat pada task berikutnya. IP-M2-02 telah di-push pada `5a16e846df1b04d784e47d043245c494124130da` dan remote exact diverifikasi. Separator catatan progres yang rusak oleh encoding PowerShell diperbaiki tanpa rewrite history.
 
 **Next step:** **IP-M2-03** — follow-up assignment/response/contact yang terpisah dari Copy, verified renewal future/later + provider evidence, new cycle/cancel old pending. Dependency IP-M2-01/02/04 tersedia; UI 05 dan delivery 06–08 mengikuti. Tidak ada blocker live untuk domain workflow.
+
+
+### IP-M2-03 — Follow-up dan verified renewal
+
+**Hasil:** server-side organization/project/role-scoped workflow untuk assignment/claim/ack, next follow-up, response/blocker/commitment, waiting/client-confirmed/in-progress, reasoned cancel/reopen, contact dan verify renewal. Waiting wajib deadline; client-confirmed/payment report tidak menutup renewal. Contact memerlukan current/ready draft dan contact target yang cocok, waktu aktual bukan future, manual channel dan next follow-up; immutable snapshot body/actor/contact/version/evidence disimpan append-only. Session/CSRF API memakai required idempotency key, locked transaction dan optimistic 409 dengan scope recheck pada replay. Verify memerlukan versi follow-up/subscription, precision/source, future/later expiry serta evidence provider baru yang telah diverifikasi oleh anggota berizin; payment/approval/old proof ditolak. Old cycle verified/by/time, old pending reminders/outbox cancelled, satu new active cycle, renew_by dihapus atau future deadline baru, payment terpisah; TPL-10 current tersedia.
+
+**Pengujian:** final `FollowupWorkflowTest|ClientTemplateTest` **15 passed / 140 assertions**, 32.30s pada MySQL `_test`; contact idempotency/current/stale/future/body/audit, waiting deadline/claim/response/cancel/reopen, verified cycle/receipt/replay/409, payment vs expiry/later/future/old proof, current RBAC/cross-org, source/new deadline hardening dan seluruh template regression. Pint targeted dan docs integrity/staged diff diperiksa.
+
+**Batas:** contact adalah manual record berdasarkan konfirmasi operator, bukan bot mengirim ke client. Evidence fixture bukan provider live; tidak ada perubahan payment yang dianggap technical renewal. Pending outbox bukan delivery; reconciliation cancellation delivery dikerjakan 08. UI/browser dan full demo belum diulang; runtime migration tetap pending.
+
+**Commit/push:** scoped workflow commit dan push normal sesudah review; receipt exact dicatat saat task berikutnya. IP-M2-04 `2ea62a5324ba5f237a32092f2d2b911af6ae97fd` telah di-push dan remote hash exact diverifikasi.
+
+**Next step:** **IP-M2-05** — dashboard scoped renewal/follow-up, current draft/blocked data links, clipboard Disalin terpisah dari Mark contacted, response/verified resolution dan template governance UI. Dependency 01–04 tersedia. Sesudah 05 lanjut 06–09; tidak ada domain blocker yang memerlukan token live.
