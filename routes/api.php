@@ -2,6 +2,7 @@
 
 use App\Application\RenewalFollowups\FollowupWorkflow;
 use App\Http\Controllers\ClientTemplateController;
+use App\Http\Controllers\ConnectorController;
 use App\Http\Controllers\FollowupController;
 use App\Http\Controllers\FoundationOrganizationController;
 use App\Http\Controllers\MonitoringController;
@@ -19,6 +20,11 @@ use Illuminate\Support\Facades\Route;
 // Dashboard APIs share the browser session and enforce CSRF on every mutation.
 Route::post('/telegram/webhook/{bot}', TelegramWebhookController::class)->whereNumber('bot');
 Route::middleware('web')->group(function (): void {
+    Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])
+        ->prefix('/v1/organizations/{organization}/connectors')->group(function (): void {
+            Route::get('/{connector}', [ConnectorController::class, 'show']);
+            Route::post('/', [ConnectorController::class, 'configure'])->middleware('step-up');
+        });
     Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])->prefix('/v1/organizations/{organization}/notifications')->group(function (): void {
         Route::get('/', [NotificationController::class, 'index']);
         Route::post('/findings/{finding}/acknowledge', [NotificationController::class, 'acknowledge'])->middleware('step-up');
