@@ -80,6 +80,7 @@ export default function Authenticated({
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
+                                        {organization && <Dropdown.Link href={route('notifications.index', organization.id)}>Notification delivery</Dropdown.Link>}
                                         {organization && <Dropdown.Link href={route('telegram.binding', organization.id)}>Telegram pribadi</Dropdown.Link>}
                                         <Dropdown.Link
                                             href={route('profile.edit')}

@@ -16,6 +16,6 @@ class TelegramDelivery extends Model
 
     protected function casts(): array
     {
-        return ['project_ids' => 'array', 'event_ids' => 'array', 'reply_markup' => 'array', 'available_at' => 'immutable_datetime', 'first_attempt_at' => 'immutable_datetime', 'last_attempt_at' => 'immutable_datetime', 'sent_at' => 'immutable_datetime', 'lease_until' => 'immutable_datetime', 'fake' => 'boolean'];
+        return ['project_ids' => 'array', 'event_ids' => 'array', 'down_incident_ids' => 'array', 'recovery_incident_ids' => 'array', 'reply_markup' => 'array', 'available_at' => 'immutable_datetime', 'queued_at' => 'immutable_datetime', 'first_attempt_at' => 'immutable_datetime', 'last_attempt_at' => 'immutable_datetime', 'sent_at' => 'immutable_datetime', 'lease_until' => 'immutable_datetime', 'fake' => 'boolean', 'uncertain' => 'boolean'];
     }
 }

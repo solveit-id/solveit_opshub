@@ -2,6 +2,7 @@
 
 namespace App\Application\Monitoring;
 
+use App\Application\TelegramNotifications\NotificationHealth;
 use App\Models\JobRun;
 use App\Models\Organization;
 use Carbon\CarbonImmutable;
@@ -24,6 +25,7 @@ class RuntimeHealth
         foreach (['storage', 'notification', 'secrets_manager', 'independent_watchdog'] as $component) {
             $components[$component] = ['state' => 'not_configured', 'last_observed_at' => null];
         }
+        $components['notification'] = app(NotificationHealth::class)->snapshot($org);
 
         return ['components' => $components, 'public_probes' => config('opshub.public_probes_enabled') ? 'enabled_live_unverified' : 'disabled', 'boundary' => 'Scheduler/worker heartbeat is local evidence. Independent watchdog, storage, notification delivery and secrets manager require separate deployment validation.'];
     }

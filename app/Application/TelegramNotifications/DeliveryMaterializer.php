@@ -2,6 +2,7 @@
 
 namespace App\Application\TelegramNotifications;
 
+use App\Models\IncidentNotificationHistory;
 use App\Models\Organization;
 use App\Models\OutboxEvent;
 use App\Models\TelegramBot;
@@ -28,6 +29,9 @@ class DeliveryMaterializer
             $events = OutboxEvent::forOrganization($org)->where('status', 'pending')->whereIn('event_type', self::EVENTS)->where(fn ($q) => $q->whereNull('available_at')->orWhere('available_at', '<=', $now))->orderBy('id')->limit(100)->lockForUpdate()->get();
             foreach ($events as $event) {
                 $targets = TelegramDestination::forOrganization($org)->where('telegram_bot_id', $bot->id)->where('enabled', true)->get()->filter(function ($dest) use ($event) {
+                    if ($event->event_type === 'incident.resolved' && ! app(DeliveryReconciler::class)->hasDown($event->aggregate_id, 'destination:'.$dest->id)) {
+                        return false;
+                    }
                     if ($event->event_type === 'telegram.test_requested') {
                         return $dest->id === ($event->payload['destination_id'] ?? null);
                     }
@@ -42,6 +46,10 @@ class DeliveryMaterializer
                     return $ids === [] ? $dest->owner_route : ($dest->all_projects || array_intersect($ids, $dest->project_ids) !== []);
                 });
                 if ($targets->isEmpty()) {
+                    if ($event->event_type === 'incident.resolved' && ! IncidentNotificationHistory::where('incident_id', $event->aggregate_id)->get()->contains(fn ($h) => app(DeliveryReconciler::class)->hasDown($event->aggregate_id, $h->recipient_reference)) && ! TelegramDelivery::whereIn('outbox_event_id', OutboxEvent::where('aggregate_type', 'incident')->where('aggregate_id', $event->aggregate_id)->whereIn('event_type', ['incident.opened', 'incident.stability_warning'])->select('id'))->whereIn('state', ['sending', 'unknown', 'retrying'])->exists()) {
+                        $event->update(['status' => 'superseded']);
+                    }
+
                     continue;
                 }
                 foreach ($targets as $dest) {
@@ -49,7 +57,7 @@ class DeliveryMaterializer
                     foreach (app(TelegramMessages::class)->render($event, $dest) as $index => $message) {
                         $delivery = TelegramDelivery::firstOrCreate(['outbox_event_id' => $event->id, 'recipient_reference' => 'destination:'.$dest->id, 'notification_kind' => $message['kind'], 'chunk_index' => $index, 'revision' => 1], [
                             'organization_id' => $org->id, 'telegram_bot_id' => $bot->id, 'telegram_destination_id' => $dest->id, 'parent_delivery_id' => $parent,
-                            'project_ids' => $message['project_ids'], 'text' => $message['text'], 'reply_markup' => $message['reply_markup'], 'severity' => $event->payload['severity'] ?? 'info',
+                            'project_ids' => $message['project_ids'], 'text' => $message['text'], 'reply_markup' => $message['reply_markup'], 'severity' => $event->payload['severity'] ?? 'info', 'identity_version' => $bot->identity_version,
                             'priority' => array_search($event->payload['severity'] ?? 'info', ['critical', 'warning', 'info']), 'available_at' => $now, 'fake' => $bot->identity_fake,
                         ]);
                         $parent = $delivery->id;

@@ -5,6 +5,7 @@ namespace App\Application\TelegramNotifications;
 use App\Jobs\SendTelegramDelivery;
 use App\Models\Organization;
 use App\Models\TelegramBinding;
+use App\Models\TelegramBot;
 use App\Models\TelegramDelivery;
 use App\Models\TelegramUpdateReceipt;
 
@@ -22,6 +23,7 @@ class TelegramPrivateReply
         $parent = null;
         foreach (app(TelegramMessages::class)->segment($text) as $index => $part) {
             $delivery = TelegramDelivery::create(['organization_id' => $org->id, 'telegram_bot_id' => $receipt->telegram_bot_id, 'binding_id' => $binding?->id, 'receipt_id' => $receipt->id, 'outbox_event_id' => $event->id, 'recipient_reference' => 'private:'.$chatId, 'notification_kind' => $binding ? 'private_reply' : 'binding_notice', 'chunk_index' => $index, 'parent_delivery_id' => $parent, 'project_ids' => $projectIds, 'text' => $part, 'severity' => 'info', 'priority' => 2, 'available_at' => now('UTC')]);
+            $delivery->update(['identity_version' => TelegramBot::findOrFail($receipt->telegram_bot_id)->identity_version]);
             $parent = $delivery->id;
             SendTelegramDelivery::dispatch($delivery->id)->onConnection('database')->onQueue(config('opshub.queue.notification'));
         }

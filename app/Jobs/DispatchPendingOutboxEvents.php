@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Application\TelegramNotifications\DeliveryMaterializer;
 use App\Models\Organization;
 use App\Models\OutboxEvent;
-use App\Models\TelegramDelivery;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -44,7 +43,5 @@ class DispatchPendingOutboxEvents implements ShouldQueue
             }
         });
         Organization::where('is_active', true)->each(fn ($org) => app(DeliveryMaterializer::class)->materialize($org));
-        // Until reconciliation owns operational dispatch, only the explicit Owner test intent is queued.
-        TelegramDelivery::where('state', 'pending')->whereIn('outbox_event_id', OutboxEvent::where('event_type', 'telegram.test_requested')->select('id'))->each(fn ($d) => SendTelegramDelivery::dispatch($d->id)->onQueue(config('opshub.queue.notification')));
     }
 }

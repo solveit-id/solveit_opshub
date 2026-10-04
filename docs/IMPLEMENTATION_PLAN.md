@@ -8,7 +8,7 @@
 
 **Evidence/progres aktual:** [CHECKPOINT.md](CHECKPOINT.md)
 
-**Posisi saat ini:** M0/M1 `MILESTONE_READY`; M2 aktif, task 01, 02, 03, 04, 05, 06, 07 implemented/tested dan IP-M2-08 berikutnya; M3–M5 belum dimulai. Full TC lintas milestone/Internal v1 belum terpenuhi.
+**Posisi saat ini:** M0/M1 `MILESTONE_READY`; M2 aktif, task 01, 02, 03, 04, 05, 06, 07, 08 implemented/tested dan IP-M2-09 berikutnya; M3–M5 belum dimulai. Full TC lintas milestone/Internal v1 belum terpenuhi.
 
 Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKPOINT menjelaskan apa yang sudah dibangun, bukti pengujian, commit/push, blocker dan panduan operasi. Membaca roadmap tidak mengotorisasi credential creation, integrasi live atau tindakan production. Instruksi user menentukan scope pekerjaan yang sedang diotorisasi.
 
@@ -29,7 +29,7 @@ Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKP
 |---|---|---|---|
 | [M0 — Foundation](#m0--foundation) | IP-M0-01–09 | Implemented/tested dalam scope fondasi. | `MILESTONE_READY` lokal; batas deployment tetap dicatat. |
 | [M1 — Registry/observation](#m1--registry-and-external-observation) | IP-M1-01–10 | Implemented/tested; gate sesuai scope disetujui Owner. | `MILESTONE_READY` lokal; full TC lintas milestone tetap menjadi kewajiban M2–M5. |
-| [M2 — Telegram/client loop](#m2--telegram-and-client-action-loop) | IP-M2-01–09 | 01, 02, 03, 04, 05, 06, 07 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. |
+| [M2 — Telegram/client loop](#m2--telegram-and-client-action-loop) | IP-M2-01–09 | 01, 02, 03, 04, 05, 06, 07, 08 implemented/tested; task lain belum selesai. | `PARTIAL_WITH_BLOCKERS`: gate belum lengkap. |
 | [M3 — Connector/backup](#m3--capability-aware-connectors-and-verified-backup) | IP-M3-01–10 | `not_started` | Belum dievaluasi. |
 | [M4 — Audit/resilience](#m4--audit-maintenance-operational-resilience) | IP-M4-01–07 | `not_started` | Belum dievaluasi. |
 | [M5 — Internal pilot](#m5--internal-pilot-and-hardening) | IP-M5-01–07 | `not_started` | Belum dievaluasi. |
@@ -338,7 +338,7 @@ Full acceptance scenario PRD 24.1 tetap utuh. Assertion yang belum diimplementas
 
 ### M2 — Telegram and client action loop
 
-**Progres aktual:** task 01, 02, 04 implemented/tested; IP-M2-03 berikutnya. [Evidence](CHECKPOINT.md#10-progres-m2--telegram-renewal-dan-client-action-loop).
+**Progres aktual:** task 01–08 implemented/tested; IP-M2-09 berikutnya. [Evidence](CHECKPOINT.md#10-progres-m2--telegram-renewal-dan-client-action-loop).
 
 **Goal:** turn renewal and incident information into accountable internal action and a safe, versioned client message draft, while keeping Telegram as the sole external notification integration and manual client contact as the default.
 
@@ -357,7 +357,7 @@ Full acceptance scenario PRD 24.1 tetap utuh. Assertion yang belum diimplementas
 | `implemented/tested` | `IP-M2-05` — Deliver follow-up/template dashboard interactions | REN-07/08, TPL-14–16, UX-05 | Current draft generation, blocked reason/link, clear Copy feedback, explicit Mark contacted form, client-confirmed/verified resolution screens, and no client delivery claim. |
 | `implemented/tested` | `IP-M2-06` — Configure Telegram domain, destination scope, outbox, and renderer | TG-01–05/10–12/15/16, JOB-04, SEC-04 | Owner-only secret reference/destination allowlist/routing/digest/quiet-hours/test delivery; durable delivery records; internal header separate from plaintext client draft; rate caps/coalescing/length segmentation. |
 | `implemented/tested` | `IP-M2-07` — Add binding, webhook receipt, commands, and constrained callbacks | TG-06–09/14, SEC-01/02/09 | One-time private-chat binding intent (10-minute TTL) plus authenticated dashboard confirmation; secret-header webhook; durable `bot+update_id` receipt; opaque expiring callbacks only for acknowledge/claim/current template; RBAC/state/replay recheck. |
-| `not_started` | `IP-M2-08` — Add delivery reconciliation, retries, digest, and degradation workflow | TG-03/10/11/13/15, NFR-04/06/12 | Pending/sending/sent/retrying/failed/unknown/cancelled/superseded states; 429/retry-after, bounded retry, timeout uncertainty, stale alert supersession, rate priority, quiet hours, bot/destination failure finding. |
+| `implemented/tested` | `IP-M2-08` — Add delivery reconciliation, retries, digest, and degradation workflow | TG-03/10/11/13/15, NFR-04/06/12 | Pending/sending/sent/retrying/failed/unknown/cancelled/superseded states; 429/retry-after, bounded retry, timeout uncertainty, stale alert supersession, rate priority, quiet hours, bot/destination failure finding. |
 | `not_started` | `IP-M2-09` — Run the full renewal/client-action demo | TC-11–25/38 | H-14 action package → ready TPL-01 → copy → manually recorded contact → waiting/client-confirmed → new expiry/evidence → verified/new cycle; then exercise binding, forged webhook, callback replay, Unicode/long template, retry/error storm. |
 
 **Deliverables:** renewal/follow-up domain; TPL-01–TPL-10 seeds/versioning/renderer; follow-up and template dashboard flow; Telegram setup/binding/webhook/callback/domain; transactional delivery and digest/retry handling; full client-action demo evidence.
@@ -595,8 +595,8 @@ All mock/sandbox data and UI badges must be clearly labelled. A fake adapter mus
 
 1. Periksa `AGENTS.md`, Git/worktree/upstream, [CHECKPOINT](CHECKPOINT.md) dan scope instruksi terakhir.
 2. Pilih task pertama yang belum selesai; gunakan dependency dan exit gate bagian 4. Jangan memulai ulang scaffold atau menghapus implementasi yang valid.
-3. Posisi saat ini: **M2 aktif**, task 01, 02, 03, 04, 05, 06, 07 implemented/tested. M1 ready sesuai ADR-0006; full scenario lintas milestone tetap unfinished pada gate pemilik.
-4. Task berikutnya **IP-M2-08**, tujuan/dependency/blocker di CHECKPOINT bagian 10. Berhenti pada exit gate atau seluruh pekerjaan M2 terblokir; jangan masuk M3 tanpa instruksi lanjutan.
+3. Posisi saat ini: **M2 aktif**, task 01, 02, 03, 04, 05, 06, 07, 08 implemented/tested. M1 ready sesuai ADR-0006; full scenario lintas milestone tetap unfinished pada gate pemilik.
+4. Task berikutnya **IP-M2-09**, tujuan/dependency/blocker di CHECKPOINT bagian 10. Berhenti pada exit gate atau seluruh pekerjaan M2 terblokir; jangan masuk M3 tanpa instruksi lanjutan.
 5. Kerjakan pilihan teknis rutin secara mandiri dalam scope yang diotorisasi; catat actual evidence serta blocker. Missing live credential tidak menghalangi pekerjaan domain/fake test yang independen.
 
 ### 9.2 Checklist awal untuk repository baru (historis M0)

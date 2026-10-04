@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistryPageController;
 use App\Http\Controllers\RenewalPageController;
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization
     Route::get('/organizations/{organization}/renewals', [RenewalPageController::class, 'index'])->name('renewals.index');
     Route::get('/organizations/{organization}/telegram', [TelegramConfigurationController::class, 'index'])->name('telegram.settings');
     Route::get('/organizations/{organization}/telegram-binding', [TelegramBindingController::class, 'index'])->name('telegram.binding');
+    Route::get('/organizations/{organization}/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/organizations/{organization}/follow-ups/{followup}', [RenewalPageController::class, 'show'])->name('followups.show');
     Route::get('/organizations/{organization}/client-templates', [ClientTemplateController::class, 'page'])->name('client-templates.page');
     Route::get('/organizations/{organization}/overview', [MonitoringController::class, 'overview'])->name('monitoring.overview');

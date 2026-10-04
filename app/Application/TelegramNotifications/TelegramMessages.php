@@ -52,6 +52,9 @@ class TelegramMessages
         if ($followup?->next_followup_at) {
             $text .= "\nDeadline: ".$followup->next_followup_at->setTimezone('Asia/Jakarta')->format('d-m-Y H:i').' WIB';
         }
+        if ($followup) {
+            $text .= "\nFollow-up: ".$followup->state.' · v'.$followup->version;
+        }
         $clientParts = [];
         if ($followup && in_array($followup->cycle->subscription->action_owner, ['client', 'shared'], true)) {
             $draft = app(DraftGenerator::class)->generate($org, $followup, $event->event_type === 'renewal.verified' ? 'TPL-10' : null);

@@ -17,6 +17,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class TelegramUpdateProcessor
@@ -82,7 +83,7 @@ class TelegramUpdateProcessor
 
                     return 'COMMAND_REPLIED';
                 });
-            } catch (HttpExceptionInterface|AuthorizationException|ModelNotFoundException|\Illuminate\Validation\ValidationException) {
+            } catch (HttpExceptionInterface|AuthorizationException|ModelNotFoundException|ValidationException) {
                 $code = 'ACTION_DENIED';
             }
             $receipt->update(['status' => 'processed', 'result_code' => $code, 'processed_at' => now('UTC')]);
