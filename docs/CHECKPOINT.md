@@ -2,17 +2,17 @@
 
 **Diperbarui:** 4 Oktober 2026
 
-**Status milestone aktif:** M1 — `PARTIAL_WITH_BLOCKERS`
+**Status milestone terakhir:** M1 — `MILESTONE_READY` dalam scope engineering lokal yang disetujui Owner; Internal v1 belum ready.
 
-**Task aktif:** `IP-M1-10` — review exit gate; demo lokal sudah implemented/tested
+**Task terakhir:** `IP-M1-10` — selesai dalam scope M1; tidak ada task aktif sesudah penutupan. M2 belum dimulai.
 
-**Review terbaru:** [lanjutan IP-M1-10](#13-review-lanjutan-ip-m1-10--4-oktober-2026); seluruh pemeriksaan lokal lulus, gate tetap terblokir dependency lintas milestone.
+**Keputusan terbaru:** [persetujuan Owner dan penutupan M1](#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026); full TC lintas milestone tetap wajib pada M2–M5.
 
 **Sumber keputusan produk:** [PRD](PRD.md)
 
 **Urutan task dan acceptance criteria:** [Implementation Plan](IMPLEMENTATION_PLAN.md)
 
-Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasil validasi, commit/push, blocker, next step, dan runbook monitoring. Hasil pengujian historis tetap disimpan dengan konteksnya; pengujian ulang pada review terbaru dicatat terpisah di bagian 1.3.
+Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasil validasi, commit/push, blocker, next step, dan runbook monitoring. Hasil historis tetap disimpan dengan konteksnya: bagian 1.3 merekam suite ulang sebelum persetujuan; bagian 1.4 mencatat keputusan terbaru dan validasi dokumentasi tanpa mengarang pengujian aplikasi baru.
 
 ## Daftar isi
 
@@ -31,8 +31,8 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 | Milestone | Progres aktual | Status gate | Langkah tersisa |
 |---|---|---|---|
 | M0 — Foundation | IP-M0-01–09 implemented; fondasi dan CI sudah diuji. | `MILESTONE_READY` untuk fondasi lokal; bukan kesiapan production. | Provisioning/MFA/integrasi live tetap mengikuti phase berikutnya. |
-| M1 — Registry dan observation | IP-M1-01–09 implemented/tested; demo IP-M1-10 juga sudah diuji. | `PARTIAL_WITH_BLOCKERS` terhadap exit gate literal. | Lengkapi keputusan sequencing TC-03/05/07 lintas milestone. |
-| M2 — Telegram/renewal/client loop | Belum dimulai. | Belum dievaluasi. | Menunggu penyelesaian keputusan gate M1 dan instruksi lanjutan. |
+| M1 — Registry dan observation | IP-M1-01–10 implemented/tested; sequencing disetujui Owner. | `MILESTONE_READY` untuk engineering lokal sesuai ADR-0006; full TC tetap unfinished. | Tidak ada pekerjaan M1 tersisa; validasi live dan full scenario mengikuti milestone pemilik. |
+| M2 — Telegram/renewal/client loop | Belum dimulai. | Belum dievaluasi. | `IP-M2-01` setelah instruksi milestone berikutnya; sequencing M1 sudah terselesaikan. |
 | M3 — Connector dan verified backup | Belum dimulai. | Belum dievaluasi. | Dependency canonical account, authorization, notification dan sandbox. |
 | M4 — Audit/resilience | Belum dimulai. | Belum dievaluasi. | Dependency M1–M3 dan validasi operasional. |
 | M5 — Internal pilot | Belum dimulai. | Belum dievaluasi. | Gate M0–M4, otorisasi target dan provisioning. |
@@ -49,7 +49,7 @@ Dokumen ini menjadi satu tempat untuk progres aktual, pemetaan requirement, hasi
 - Live limits: native client/provider probes, credentialed metrics, Telegram delivery, production Redis, secrets/storage/MFA deployment and independent watchdog are **live-unverified/not configured**. DNS TXT unsupported. Local fake/browser evidence is not Internal v1 or production readiness. Remote CI for implementation commit `2ad9b1b15be8b6b76fdf772d72aab6b25cecdee0` completed **success**: [run 37166571900](https://github.com/solveit-id/solveit_opshub/actions/runs/37166571900). The later documentation receipt changes no runtime/test source.
 - Next step: **IP-M1-10 exit-gate review** — resolve cross-milestone TC mapping/sequence with the Owner while preserving full acceptance criteria. Dependencies: decisions for full TC-03/05/07 later-phase evidence; blocker: the current gate cannot be satisfied inside M1 scope. After explicit gate resolution and further instruction, **IP-M2-01** models subscription expiry precision, renewal cycle and follow-up state; depends on M0 transactional foundation and M1 registry/subscription/policy/event facts.
 
-### 1.2 Blocker exit gate dan next step
+### 1.2 Blocker exit gate sebelum persetujuan Owner (historis)
 
 | Blocker | Bukti yang sudah tersedia | Dependency yang belum tersedia | Keputusan berikutnya |
 |---|---|---|---|
@@ -61,6 +61,8 @@ Task berikutnya yang masih aktif adalah **IP-M1-10 — review exit gate**. Tidak
 
 ### 1.3 Review lanjutan IP-M1-10 — 4 Oktober 2026
 
+Review berikut merekam kondisi **sebelum** persetujuan Owner. Status/stop/next step pada saat itu dipertahankan sebagai evidence historis; keputusan terbaru ada di bagian 1.4.
+
 - **Baseline:** worktree bersih, `main`/`origin/main` sama pada `a0d0d3775df228b1241fac093b5beb6fedb5fee0`; instruksi root, PRD, plan, matriks TC dan source diperiksa. M1 adalah milestone pertama yang belum selesai. Tidak ada perubahan runtime atau task milestone baru.
 - **Hasil review:** IP-M1-01–09 dan demo IP-M1-10 tetap implemented/tested. [MonitoringVerticalDemoTest](../tests/Feature/MonitoringVerticalDemoTest.php) membuktikan enam sample fake, shared monitor, recovery/closure, stale/unknown dan incident event tetap pending. [IncidentEngine](../app/Application/Monitoring/IncidentEngine.php) menyimpan delivery guard; [RuntimeHealth](../app/Application/Monitoring/RuntimeHealth.php) masih menyatakan notification/watchdog `not_configured`. Metadata subscription serta fake cPanel tidak menyediakan canonical renewal reminder, verified account backup atau scope download. Tidak ditemukan task M1 independen yang belum selesai.
 - **Pengujian aktual pada baseline tersebut:** `composer test` lulus **71 tests / 392 assertions**, suite **97.97s**, TypeScript/Vite build **47.58s**; mencakup demo, race MySQL, SSRF/redirect/peer, TLS escalation, scope, version/idempotency, maintenance dan freshness. PHP **8.5.7**, Node **22.23.1**, MySQL **8.4.11**. `composer db:check`, 11 migration berstatus `Ran`, `php artisan schedule:list`, Pint dan `composer validate --strict` lulus. Guard PHPUnit/TestCase diperiksa sebelum suite: MySQL `solveit_opshub_test`, `APP_ENV=testing`, tanpa `DB_URL`; persistent runtime/volume tidak di-reset.
@@ -69,6 +71,28 @@ Task berikutnya yang masih aktif adalah **IP-M1-10 — review exit gate**. Tidak
 - **Integritas/cleanup:** audit dokumentasi lulus 384 pemeriksaan total, termasuk 212 pemeriksaan integritas isi; 52 task dan 6 exit gate literal tetap utuh, 10 dokumen Markdown serta 86 tautan relatif/anchor valid. `git diff --check` lulus; manifest `storage/app/qa-m1-login.json` tidak tersisa setelah suite. Source, lockfiles, `.env`, dependency dan artifact QA/build tidak termasuk perubahan commit.
 - **Commit/push terverifikasi:** review `fe1e0927793b2d4189421dd4bbe68455af1230fa` (`(docs) verify M1 exit gate and record current blockers`) hanya mengubah `docs/CHECKPOINT.md` dan `docs/IMPLEMENTATION_PLAN.md`; push biasa `main` → `origin/main` berhasil dan remote `refs/heads/main` cocok. Receipt ini dicatat pada commit dokumentasi berikutnya; hasil CI baru belum diperiksa. Tidak ada task implementasi baru yang ditandai selesai.
 - **Next step konkret:** tetap **IP-M1-10** — Owner menetapkan sequencing bukti full TC-03/05/07 agar prerequisite M1 tidak melingkar dengan M2/M3/M4/M5, sambil mempertahankan acceptance produk. Setelah keputusan itu dicatat dan instruksi milestone berikutnya diberikan, **IP-M2-01** membangun expiry precision, renewal cycle dan follow-up state; dependency M0 auth/outbox/security serta M1 registry/subscription/policy/incident events. Blocker saat ini adalah urutan gate, bukan token live yang hilang.
+
+### 1.4 Keputusan Owner dan penutupan M1 — 4 Oktober 2026
+
+**Baseline:** worktree bersih, `main`/`origin/main` pada `a2868436d269f69f2f0532144c320ec60ade3c78`. Owner menjawab setuju atas usulan gate M1 sesuai scope observasi, assertion full TC tetap pada milestone pemilik, dan stop sebelum M2. [ADR-0006](adr/0006-milestone-acceptance-sequencing.md), PRD v1.0.1, plan dan snapshot AGENTS diselaraskan secara eksplisit; tidak ada waiver acceptance produk atau perubahan runtime/live config.
+
+**Hasil:** IP-M1-10 dan M1 **`MILESTONE_READY`** untuk engineering lokal. Full TC-03/05/07, bagian credentialed quota TC-08 dan destination delivery TC-10 tetap unfinished, bukan pass. Kewajiban reminder/delivery dicatat pada gate M2, account backup/download/quota pada M3, watchdog contract pada M4 dan failure-domain alert pada M5. Gate Internal v1 tetap TC-01–44 lengkap plus live/sandbox evidence yang sesuai. Tidak ada task M2 dimulai.
+
+| Gate/acceptance M1 yang dinilai | Evidence yang mendukung |
+|---|---|
+| Registry/environment/scope dan policy/data | RegistryApiTest, RegistryMetadataTest, MonitoringPolicyTest, MonitoringWorkflowTest; histori browser bagian 5.4. |
+| Public observation tanpa hosting credential; gap internal/backup jujur | MonitoringVerticalDemoTest, MonitoringHealth, explicit fake provenance dan UI gap bagian 5.3/5.4. |
+| SSRF/redirect/peer, TLS/DNS, expected-content dan sanitized evidence | HttpProbeTest, TlsDnsProbeTest, FoundationReliabilityTest; suite lengkap mencakup regresi malformed redirect/TLS escalation. |
+| Incident/dedup/maintenance/flapping/recovery/summary | IncidentEngineTest, MonitoringConcurrencyTest dan MonitoringWorkflowTest; browser lifecycle bagian 5.4. |
+| Shared monitor/run, lease fencing, stale/unknown dan demo | MonitoringSchedulerTest, ObservationTest dan MonitoringVerticalDemoTest; enam sample fake serta dua proses race MySQL bagian 5.2. |
+
+**Pengujian/evidence:** hasil lokal terakhir tetap **71 tests / 392 assertions**, suite 97.97s dan build 47.58s pada source baseline `a0d0d3775df228b1241fac093b5beb6fedb5fee0` (bagian 1.3). Diff Git memverifikasi app/bootstrap/config/database/resources/routes/scripts/tests, lockfiles, PHPUnit dan CI identik sejak baseline tersebut; hanya dokumentasi berubah. Hasil browser dan CI implementasi `2ad9b1b` tetap historis. Suite aplikasi/build/browser tidak diulang untuk perubahan dokumen; native probes, provider, Telegram, Redis, storage/secrets/MFA dan watchdog tetap live-unverified/not configured; TXT unsupported.
+
+**Validasi perubahan:** audit dokumentasi lulus **340 pemeriksaan**: 52 task beserta judul/mapping/output tetap utuh, 46 full scenario PRD dan enam blok acceptance milestone identik, gate M0/M5 literal tidak berubah; hanya gate engineering M1–M4 diamendemen secara eksplisit untuk alokasi evidence. Sebelas dokumen Markdown dan 94 tautan relatif/anchor valid; tidak ada path usang/conflict marker/encoding rusak. Diff source sejak baseline suite kosong; scope perubahan tepat lima path dokumentasi. `git diff --check` lulus. Secret, `.env`, dependencies/build/QA artifacts dikecualikan.
+
+**Commit/push:** perubahan penutupan M1 akan di-commit dan di-push biasa `main` → `origin/main` setelah scope staging diverifikasi; receipt hash dicatat setelah remote cocok. Commit review terdahulu `fe1e092` dan receipt `a286843` tetap evidence historis.
+
+**Next step:** **IP-M2-01** — model expiry precision/source timezone, renewal cycle dan follow-up state; dependency M0 auth/outbox/security dan M1 canonical registry/subscription/policy/incident events sudah tersedia. Tidak ada blocker sequencing M1. Pengembangan M2 menunggu instruksi milestone berikutnya sesuai stop boundary yang disetujui; missing bot/config live tidak menghalangi domain/fake work setelah diotorisasi. Semua acceptance full TC dan batas live tetap wajib.
 
 ## 2. Arti status dan standar bukti
 
@@ -172,7 +196,7 @@ Unit/feature test suite, CI workflow, M0 status reporting convention.
 | `IP-M1-07` | Incident, maintenance dan flapping | `implemented` | Passing dalam scope lokal; lihat bukti dan batas live. |
 | `IP-M1-08` | Overview dan workflow operator | `implemented` | Passing dalam scope lokal; lihat bukti dan batas live. |
 | `IP-M1-09` | Scheduler, durable queue dan self-health | `implemented` | Passing dalam scope lokal; lihat bukti dan batas live. |
-| `IP-M1-10` | Demo, concurrency dan evaluasi exit gate | `partial` | Demo/concurrency/browser passing; gate penuh partial. |
+| `IP-M1-10` | Demo, concurrency dan evaluasi exit gate | `implemented` | Passing untuk gate M1 sesuai persetujuan Owner/ADR-0006; full TC lintas milestone unfinished. |
 
 #### Detail hasil dan batas validasi
 
@@ -232,9 +256,9 @@ Durable database probe queue, canonical shared schedules, UTC leases, bounded cr
 
 ##### IP-M1-10 — Demo, concurrency dan evaluasi exit gate
 
-**Implementasi:** `partial`.
+**Implementasi:** `implemented`; pengujian `passing` untuk scope M1.
 
-Fake demo and browser recovery helper implemented/tested, test-only MySQL guards, actual two-process concurrency and migration rollback verified. Complete suite: 70 passed/386 assertions; final TLS escalation regression recorded in checkpoint. Browser desktop/mobile, stale/unknown, closure and CSRF verified. Full TC-03/05/07 gate blocked by later-milestone dependencies; no acceptance waiver or live delivery claim.
+Fake demo and browser recovery helper implemented/tested, test-only MySQL guards, actual two-process concurrency and migration rollback verified. Latest complete suite: 71 passed/392 assertions, including TLS escalation; earlier 70 passed/386 assertions and browser desktop/mobile, stale/unknown, closure and CSRF evidence remain historical. The Owner-approved sequencing in ADR-0006 closes the local engineering M1 gate. Full cross-milestone scenarios remain unfinished with named M2–M5 owners; no acceptance waiver or live delivery claim.
 
 ## 4. Requirement dan batas implementasi
 
@@ -298,13 +322,15 @@ M0 is `MILESTONE_READY` only after the M0 automated suite, typecheck/build, migr
 
 ### 5.1 Scope, baseline dan keputusan
 
+**Keputusan terkini:** M1 `MILESTONE_READY` sesuai scope engineering yang disetujui Owner; lihat bagian 1.4 dan ADR-0006. Paragraf berikut mempertahankan hasil gate literal **sebelum persetujuan**, bukan status terbaru. Full TC lintas milestone tetap unfinished.
+
 M1 observation implementation is implemented and locally tested. The literal milestone exit gate remains **PARTIAL_WITH_BLOCKERS**: the plan requires *all* TC-01–10 to pass, but the complete PRD scenarios include renewal/full backup/account download (TC-03), Telegram delivery history (TC-05), and an independent watchdog (TC-07). Those capabilities belong to M2/M3/M4/M5 and are not implemented or silently waived here. No M2 task was started. IP-M1-10's fake vertical demo is implemented/tested; its full scenario gate remains partial.
 
 Baseline: `main` at `ef8fb15`, clean worktree, upstream `origin/main`. IP-M1-01–03 already existed. Local instructions and actual source/tests were checked before proceeding. Existing product choices, credentials-free public probes, explicit capability gaps, fixed three-fail/two-pass behavior, environment separation, and default-disabled connectors were retained.
 
 ### 5.2 Pengujian otomatis
 
-- `composer test`: builds TypeScript/Vite before running the complete dedicated MySQL suite. Final result is recorded in section 1.1; local detailed output is ignored at `output/qa/m1-final-suite.log`.
+- `composer test`: builds TypeScript/Vite before running the complete dedicated MySQL suite. Initial implementation results are recorded in section 1.1; local detailed output is ignored at `output/qa/m1-final-suite.log`. The later complete 71-test review is recorded separately in section 1.3 and reused for the unchanged source in section 1.4.
 - `php vendor/bin/pint --test`, `composer validate --strict`, and `git diff --check` pass.
 - [Remote CI run 37166571900](https://github.com/solveit-id/solveit_opshub/actions/runs/37166571900) for exact implementation commit `2ad9b1b15be8b6b76fdf772d72aab6b25cecdee0` completed **success**. Ubuntu/MySQL workflow validates the final committed test files, frontend build and Pint; local suite counts above remain their actual separately recorded runs. The later documentation receipt changes no runtime/test source.
 - `MonitoringVerticalDemoTest`: real scheduler, probe job, fenced observation persistence, incident engine, transactional outbox and closure services under explicit fakes. Six samples produce `up → suspect → suspect → down → recovering → up`; one canonical monitor serves two projects; one down and one recovery event remain pending for M2; first failure/recovery timestamps precede confirmations; expired freshness yields unknown.
@@ -315,18 +341,20 @@ Baseline: `main` at `ef8fb15`, clean worktree, upstream `origin/main`. IP-M1-01�
 
 ### 5.3 Matriks TC-01–10
 
+Seluruh assertion/prerequisite observasi M1 di tabel ini passing sesuai [alokasi pada plan](IMPLEMENTATION_PLAN.md#pembagian-bukti-tc-0110); kolom remaining tetap menyatakan full scenario unfinished, bukan pass. Requirement release tidak dihapus ketika gate engineering M1 ditutup.
+
 | Scenario | Evidence in M1 | Remaining full-scenario boundary |
 |---|---|---|
 | TC-01 | Fake credential-free public observation loop; project browser shows backup `not_configured`, internal `unsupported`, partial coverage, explicit fixture provenance. | Native HTTP/TLS/DNS are implemented but live-unverified. No fabricated provider/internal metrics. |
 | TC-02 | Registry/environment/policy scope tests, active membership/project denial and cross-organization negatives. | Live secret/provider configuration is not configured; M1 never creates hosting secrets. |
-| TC-03 | Shared public asset produces one canonical monitor/run and two impacted-project snapshots; archive/configuration retains incident history. | **Blocked full scenario:** canonical renewal reminder is M2; full account backup/download authorization is M3. Shared public probing alone is not TC-03 completion. |
+| TC-03 | Shared public asset produces one canonical monitor/run and two impacted-project snapshots; archive/configuration retains incident history. | **Unfinished full scenario:** canonical renewal reminder IP-M2-02; full account backup/impact/scoped download IP-M3-04–08/10. Shared public probing alone is not TC-03 completion. |
 | TC-04 | Fake-clock third failure creates one incident and pending outbox event; distinct first/confirmed timestamps; real MySQL races prove deduplication. | Pilot detection latency/load measurement is M5; no production latency claim. |
-| TC-05 | Two successful samples resolve; close requires summary and recovery; recovery event includes destination down-delivery guard. Browser recovery/closure succeeds. | **Blocked full scenario:** M2 must consume events and enforce actual destination delivery history. A payload guard is not delivery validation. |
+| TC-05 | Two successful samples resolve; close requires summary and recovery; recovery event includes destination down-delivery guard. Browser recovery/closure succeeds. | **Unfinished full scenario:** IP-M2-06/08/09 must consume events and enforce actual destination delivery history. A payload guard is not delivery validation. |
 | TC-06 | HTTP 200/content mismatch fails; absent expected content is `not_configured` structured evidence shown in browser. | Live target app-content validation remains unverified. |
-| TC-07 | Clock tests and elapsed-time browser evidence show stale scheduler/worker and project unknown, retaining last HTTP_OK evidence without fabricated outage. | **Blocked full scenario:** independent failure-domain watchdog and external alert are not configured (M4/M5). |
-| TC-08 | TLS expiry 30/7-day/invalid-certificate tests; nullable quota metadata remains nullable, without invented percentage. | Credentialed quota observation/capability UI is M3 and live-unverified. |
+| TC-07 | Clock tests and elapsed-time browser evidence show stale scheduler/worker and project unknown, retaining last HTTP_OK evidence without fabricated outage. | **Unfinished full scenario:** watchdog contract/failure tests IP-M4-05/07; separate failure-domain provisioning/alert IP-M5-02/04 remain not configured. |
+| TC-08 | TLS expiry 30/7-day/invalid-certificate tests; nullable quota metadata remains nullable, without invented percentage. | Credentialed quota observation/capability/null evidence IP-M3-01/02/10 remains unfinished/live-unverified. |
 | TC-09 | Maintenance keeps observations/downtime, suppresses alert, and alerts on a persistent failing sample after the window. | Production maintenance validation remains unverified. |
-| TC-10 | Three episodes/30 minutes set flapping and coalesce one stability event; all observations and transitions remain; scoped timeline exposes history. | Telegram destination coalescing/delivery is M2. |
+| TC-10 | Three episodes/30 minutes set flapping and coalesce one stability event; all observations and transitions remain; scoped timeline exposes history. | Telegram destination coalescing/delivery IP-M2-06/08/09 remains unfinished. |
 
 ### 5.4 Pengujian browser lokal
 
@@ -448,6 +476,8 @@ Dokumentasi receipt M1: `989cf1758773affc7a2de40014236a8074250579`. Pada awal pe
 7. Simpan progres, evidence dan runbook di dokumen ini agar tidak muncul checkpoint paralel yang saling bertentangan.
 
 ### 9.1 Penataan dokumentasi — 4 Oktober 2026
+
+Catatan berikut historis, sebelum persetujuan sequencing Owner; keputusan dan next step terkini ada di bagian 1.4.
 
 **Scope:** konsolidasi progres/evidence/runbook, perapian roadmap, pemindahan PRD/plan ke `docs/`, perbaikan referensi, dan instruksi root `AGENTS.md`. Tidak ada task milestone baru atau perubahan runtime aplikasi.
 

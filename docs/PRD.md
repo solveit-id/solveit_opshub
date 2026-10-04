@@ -8,8 +8,8 @@
 |---|---|
 | Produk | Solveit OpsHub |
 | Pemilik produk | Solveit Indonesia |
-| Versi dokumen | 1.0.0 |
-| Tanggal | 3 Oktober 2026 |
+| Versi dokumen | 1.0.1 |
+| Tanggal | 4 Oktober 2026 |
 | Bahasa UI dan template | Bahasa Indonesia; identifier kode berbahasa Inggris |
 | Zona waktu tampilan default | Asia/Jakarta |
 | Target pertama | Sistem internal Solveit Indonesia |
@@ -1327,13 +1327,15 @@ Milestone berurutan berdasarkan dependency. Jangan membuat estimasi minggu pasti
 | Milestone | Deliverable | Exit gate |
 |---|---|---|
 | M0 — Foundation | Repository assessment, stack decision, auth/RBAC, organization scope, safe config, domain schema baseline, audit/outbox/queue, fake adapters | Auth/scope/security fundamentals; CI/checks sesuai stack; tidak ada credential hardcode |
-| M1 — Registry dan observation | Clients/projects/assets/environment, policy assignment, public probe HTTP/TLS/DNS, health/freshness, incidents, overview | TC-01–10 dan policy/data tests; external loop tanpa hosting credential berfungsi |
+| M1 — Registry dan observation | Clients/projects/assets/environment, policy assignment, public probe HTTP/TLS/DNS, health/freshness, incidents, overview | Seluruh assertion TC-01–10 dalam scope M1 dan policy/data/security tests; external loop tanpa hosting credential berfungsi; full scenario mengikuti milestone pemilik di bawah |
 | M2 — Telegram dan client actions | Bot setup/binding, scoped destinations, outbox/retries/digest, renewal cycles, follow-up, 10 template, copy/contact/verify workflow | TC-11–25/38; satu simulasi renewal lengkap; hanya Telegram API communication |
 | M3 — Connectors dan backup | cPanel capability discovery, SFTP read, source backup/pull, independent storage, integrity, retention, scoped access, restore runbook/drill evidence | TC-26–35/39–41; live sandbox-supported paths validated; unsupported jujur |
 | M4 — Audit dan maintenance | Audit templates/checklists, findings, task lifecycle, operational reports, policy rollout, activity views, self-health/watchdog/DR | TC-36/37/40–43; no unsupported pass; write kill switch efektif |
 | M5 — Internal pilot dan hardening | Real project onboarding bertahap, performance/resource tuning, runbooks, measured operational metrics, readiness review | TC-01–44 evidence complete; pilot gates bagian 26; release Internal v1 |
 | M6 — v1.1 optional | App/repo adapters, DB dump paths, controlled deployment/update/restore supported, approval/canary | TC-45/46 + inherited regressions; approval/backup/verification demonstrated |
 | M7 — Product discovery | Agency interviews/pilot, pricing/unit cost hypothesis, onboarding support demand, tenant hardening plan | External user demand dan security/support feasibility; belum public SaaS by default |
+
+**Sequencing disetujui Owner, 4 Oktober 2026:** gate engineering M1 menilai registry, public observation, incident, freshness, keamanan dan demo sesuai [pembagian bukti pada plan](IMPLEMENTATION_PLAN.md#pembagian-bukti-tc-0110). Full TC-03 renewal/backup/download tetap wajib di M2/M3; TC-05 histori delivery dan TC-10 destination coalescing di M2; TC-08 credentialed quota di M3; TC-07 watchdog contract di M4 dan bukti failure domain terpisah di M5. Seluruh definisi scenario bagian 24.1, acceptance produk dan gate Internal v1 **TC-01–44** tetap utuh. Status ready M1 tidak berarti skenario lintas milestone sudah pass atau integrasi live tervalidasi. Keputusan dan batas otorisasi: [ADR-0006](adr/0006-milestone-acceptance-sequencing.md).
 
 ### 25.1 Implementasi vertikal pertama
 
@@ -1345,7 +1347,7 @@ Setelah M0, agent sebaiknya membuktikan satu demo end-to-end:
 4. Client confirmed payment → masih unresolved → expiry baru verified → resolved/cycle baru.
 5. Website pulih 2 samples → recovery → closure.
 
-Demo ini membuktikan business loop sebelum banyak connector dikembangkan. Live Telegram sandbox diaktifkan setelah Owner memasang konfigurasi dan test delivery yang diminta pada implementasi, bukan saat sekadar membaca PRD ini.
+Demo ini membuktikan business loop sebelum banyak connector dikembangkan. Bagian observasi/incident/outbox dibuktikan di M1; delivery Telegram, renewal, template dan contact/verification melengkapi loop di M2. Live Telegram sandbox diaktifkan setelah Owner memasang konfigurasi dan test delivery yang diminta pada implementasi, bukan saat sekadar membaca PRD ini.
 
 ### 25.2 Deliverable engineering saat agent mengimplementasikan
 
@@ -1556,3 +1558,4 @@ Dokumentasi berikut diperiksa pada 3 Oktober 2026 untuk batas integrasi. Require
 | Versi | Tanggal | Perubahan |
 |---|---|---|
 | 1.0.0 | 3 Oktober 2026 | Baseline lengkap Solveit OpsHub: internal-first, shared-hosting-aware, Telegram-only, client action packages/template follow-up, phased backup/audit/controlled operations, security, data/API contracts, dan release acceptance. |
+| 1.0.1 | 4 Oktober 2026 | Owner menyetujui sequencing evidence gate M1 sesuai scope observasi; assertion lintas milestone tetap wajib pada M2–M5 dan release TC-01–44. Definisi scenario, acceptance produk dan batas live tidak berubah; lihat ADR-0006. |

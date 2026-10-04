@@ -4,11 +4,11 @@
 
 **Fungsi:** roadmap, dependency dan acceptance criteria Internal v1 (M0–M5)
 
-**Otoritas produk:** [PRD](PRD.md) v1.0.0
+**Otoritas produk:** [PRD](PRD.md) v1.0.1
 
 **Evidence/progres aktual:** [CHECKPOINT.md](CHECKPOINT.md)
 
-**Posisi saat ini:** M0 foundation selesai; M1 observation implemented/tested, gate `PARTIAL_WITH_BLOCKERS`; M2–M5 belum dimulai.
+**Posisi saat ini:** M0 dan M1 `MILESTONE_READY` dalam scope engineering lokal setelah sequencing disetujui Owner; M2–M5 belum dimulai. Full TC lintas milestone dan gate Internal v1 tetap belum terpenuhi.
 
 Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKPOINT menjelaskan apa yang sudah dibangun, bukti pengujian, commit/push, blocker dan panduan operasi. Membaca roadmap tidak mengotorisasi credential creation, integrasi live atau tindakan production. Instruksi user menentukan scope pekerjaan yang sedang diotorisasi.
 
@@ -28,7 +28,7 @@ Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKP
 | Milestone | Task | Progres | Exit gate |
 |---|---|---|---|
 | [M0 — Foundation](#m0--foundation) | IP-M0-01–09 | Implemented/tested dalam scope fondasi. | `MILESTONE_READY` lokal; batas deployment tetap dicatat. |
-| [M1 — Registry/observation](#m1--registry-and-external-observation) | IP-M1-01–09; IP-M1-10 | 01–09 implemented/tested; demo 10 passing. | `PARTIAL_WITH_BLOCKERS`: TC-03/05/07 lengkap memerlukan phase berikutnya. |
+| [M1 — Registry/observation](#m1--registry-and-external-observation) | IP-M1-01–10 | Implemented/tested; gate sesuai scope disetujui Owner. | `MILESTONE_READY` lokal; full TC lintas milestone tetap menjadi kewajiban M2–M5. |
 | [M2 — Telegram/client loop](#m2--telegram-and-client-action-loop) | IP-M2-01–09 | `not_started` | Belum dievaluasi. |
 | [M3 — Connector/backup](#m3--capability-aware-connectors-and-verified-backup) | IP-M3-01–10 | `not_started` | Belum dievaluasi. |
 | [M4 — Audit/resilience](#m4--audit-maintenance-operational-resilience) | IP-M4-01–07 | `not_started` | Belum dievaluasi. |
@@ -36,11 +36,11 @@ Dokumen ini menjelaskan apa yang harus dibangun dan syarat penerimaannya. CHECKP
 
 Status task di bagian 4 adalah snapshot implementasi, bukan izin mengaktifkan fitur live. `implemented/tested` berarti behavior lokal dalam scope task terbukti; `partial` berarti ada pekerjaan/gate tersisa; `not_started` berarti task belum dijalankan. ID task menentukan urutan kerja dalam milestone; dependency dan gate tetap mengikat. Untuk detail test/live gunakan CHECKPOINT.
 
-### Catatan gate M1 yang masih terbuka
+### Keputusan sequencing gate M1
 
-Exit gate M1 tetap meminta semua TC-01–10 lulus. TC-03 mencakup renewal/account backup/download, TC-05 mencakup histori delivery Telegram, dan TC-07 mencakup independent watchdog. Bagian observasi sudah teruji, tetapi bukti lengkap skenario tersebut bergantung pada M2/M3/M4/M5. Catatan ini **tidak mengubah acceptance criteria** atau mengizinkan masuk M2: task aktif tetap IP-M1-10 gate review sampai sequencing diputuskan secara eksplisit. Lihat [matriks TC](CHECKPOINT.md#53-matriks-tc-0110).
+Owner pada 4 Oktober 2026 menyetujui gate engineering M1 sesuai scope registry/observation/incident/freshness/security/demo; assertion full TC yang bergantung pada M2–M5 tetap wajib pada gate milestone pemilik dan release Internal v1. Definisi TC dan acceptance produk tidak diubah, tidak ada waiver, dan fake/pending event bukan bukti delivery atau live readiness. [ADR-0006](adr/0006-milestone-acceptance-sequencing.md) mencatat keputusan dan batas otorisasi; [matriks TC](CHECKPOINT.md#53-matriks-tc-0110) memisahkan evidence M1 dari full scenario yang masih unfinished.
 
-Review lanjutan 4 Oktober 2026 mengonfirmasi dependency tersebut dari source; build dan suite lokal lengkap lulus **71 tests / 392 assertions**. Tidak ditemukan pekerjaan M1 independen yang tersisa. Status gate tetap `PARTIAL_WITH_BLOCKERS`; pengembangan berhenti dalam M1 sesuai instruksi, menunggu keputusan sequencing dan instruksi milestone berikutnya. Lihat [checkpoint review](CHECKPOINT.md#13-review-lanjutan-ip-m1-10--4-oktober-2026) untuk evidence, batas live dan next step. Literal acceptance/exit gate di bawah tetap utuh.
+Source tidak berubah sejak suite lokal **71 tests / 392 assertions**. Evidence lokal dan historis browser/CI serta validasi keputusan di [checkpoint penutupan M1](CHECKPOINT.md#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026) memenuhi gate M1 yang disetujui. M1 `MILESTONE_READY`; pekerjaan ini berhenti sebelum M2. Next task setelah instruksi milestone berikutnya adalah `IP-M2-01`, bukan mengulang review gate M1.
 
 ## Daftar isi
 
@@ -282,7 +282,7 @@ M2 may start its domain/UI work as M1 stabilizes, but the end-to-end renewal/Tel
 
 ### M1 — Registry and external observation
 
-**Progres aktual:** Observasi implemented/tested; IP-M1-10 gate partial. Lihat catatan gate M1 di atas. [Evidence](CHECKPOINT.md).
+**Progres aktual:** IP-M1-01–10 implemented/tested; `MILESTONE_READY` untuk gate engineering sesuai scope yang disetujui Owner. [Evidence](CHECKPOINT.md#14-keputusan-owner-dan-penutupan-m1--4-oktober-2026).
 
 **Goal:** give the team one canonical portfolio inventory and detect a real public website problem with correct freshness, health, incident, and dashboard semantics—without hosting credentials.
 
@@ -303,11 +303,28 @@ M2 may start its domain/UI work as M1 stabilizes, but the end-to-end renewal/Tel
 | `implemented/tested` | `IP-M1-07` — Implement incident episode lifecycle and maintenance suppression | MON-03/07–10/13, JOB-09 | 3 eligible failures create one episode; repeat evidence dedups; 2 successes resolve; closure needs summary; recurrence semantics; maintenance window suppresses alert only, not evidence/downtime; flapping coalesces. |
 | `implemented/tested` | `IP-M1-08` — Build overview, registry, project, asset, and incident workflows | UX-01–05/09, MON-08, REG-11 (design only until M4 search) | Attention sort, text/icon status, last observation/source, explicit empty/error/stale/missing-permission states, scoped incident detail/ack/assign/close actions. |
 | `implemented/tested` | `IP-M1-09` — Expose scheduler/worker health and observation safety tests | MON-14, JOB-02/06, NFR-05/12 | Scheduler heartbeat, job lag, missed-slot/coverage signal, queue worker state, and an initial self-health page; no independent production watchdog claim yet. |
-| `partial` | `IP-M1-10` — Execute the first vertical demo under fakes | TC-01–10 | Fictitious client/project/public URL: up → 3 failures → one incident/outbox record → 2 successes → recovery/closure. Include shared resource and stale-scheduler variants. |
+| `implemented/tested` | `IP-M1-10` — Execute the first vertical demo under fakes | TC-01–10 | Fictitious client/project/public URL: up → 3 failures → one incident/outbox record → 2 successes → recovery/closure. Include shared resource and stale-scheduler variants. |
 
 **Deliverables:** canonical registry and scoped asset graph; monitoring policies; HTTP/TLS/DNS probes; observation/freshness/health engine; incidents; overview/project/incident pages; M1 demo data and evidence.
 
-**Testing:** TC-01–10; SSRF/private/redirect/DNS-rebinding negatives; HTTP 200 expected-content mismatch; fake-clock three-fail/two-success; duplicate active incident; maintenance window; flapping; stale scheduler versus down; shared resource; accessibility states.
+**Testing:** seluruh assertion TC-01–10 dalam scope M1 pada tabel berikut; SSRF/private/redirect/DNS-rebinding negatives; HTTP 200 expected-content mismatch; fake-clock three-fail/two-success; duplicate active incident; maintenance window; flapping; stale scheduler versus down; shared resource; accessibility states. Full TC yang belum tersedia tetap unfinished pada milestone pemilik.
+
+#### Pembagian bukti TC-01–10
+
+| Scenario | Assertion/prerequisite yang wajib terbukti pada gate M1 | Kewajiban full scenario setelah M1 |
+|---|---|---|
+| TC-01 | Public observation tanpa hosting credential; gap backup/internal terlihat; provenance fake eksplisit, tanpa fake metric dianggap live. | Native/client pilot dan capability live tetap membutuhkan evidence M3/M5 yang sesuai. |
+| TC-02 | Organization/project/environment/policy scope terisolasi; perubahan staging tidak mengubah konfigurasi production; unauthorized mutation ditolak. | Konfigurasi secret/provider live tetap mengikuti scope dan validasi milestone pemilik. |
+| TC-03 | Canonical shared public monitor/run dan impacted-project snapshots; history tetap utuh. | `IP-M2-02`: satu canonical renewal reminder; `IP-M3-04`–`08`/`10`: canonical account backup/impact dan scoped download. Shared probe bukan pass full TC-03. |
+| TC-04 | Tiga eligible failures, satu incident/pending outbox, first-failure/confirmed timestamp berbeda; race/dedup teruji. | Pengukuran latency/load pilot di M5; event pending bukan delivery. |
+| TC-05 | Dua successes resolve, recovery event dengan guard, closure membutuhkan summary/recovery. | `IP-M2-06`/`08`/`09`: recovery notification hanya untuk destination dengan histori down delivery. |
+| TC-06 | HTTP 200/content mismatch gagal; expected-content opt-in dan gap aplikasi jujur. | App-content validation target live masih membutuhkan otorisasi/evidence. |
+| TC-07 | Scheduler/worker stale dan required observation unknown; tidak mengarang target outage. | `IP-M4-05`/`07`: watchdog contract/negative tests; `IP-M5-02`/`04`: alert dari failure domain terpisah. |
+| TC-08 | TLS warning/critical/invalid sesuai threshold; metadata quota null tidak menjadi percentage palsu. | `IP-M3-01`/`02`/`10`: credentialed quota/capability evidence dan unsupported/null guards. |
+| TC-09 | Maintenance menyimpan evidence/downtime, suppress alert, evaluasi lagi sesudah window. | Validasi operational/pilot sesuai scope M5. |
+| TC-10 | Tiga episodes/30 minutes coalesce stability event; seluruh episode/evidence tetap terlihat. | `IP-M2-06`/`08`/`09`: destination delivery/rate coalescing; event bukan pengiriman. |
+
+Full acceptance scenario PRD 24.1 tetap utuh. Assertion yang belum diimplementasikan/dibuktikan di atas tidak ditandai pass; gate Internal v1 tetap TC-01–44 dengan metode dan live/sandbox evidence yang diwajibkan. Matriks ini memutus dependency melingkar, bukan menurunkan acceptance atau mengotorisasi milestone berikutnya.
 
 **Acceptance criteria:**
 
@@ -317,7 +334,7 @@ M2 may start its domain/UI work as M1 stabilizes, but the end-to-end renewal/Tel
 - Incident evidence is deduplicated and sanitized; recovery/close follows the specified lifecycle.
 - The overview ranks actionable attention and never displays stale, unsupported, or unknown as healthy.
 
-**Exit gate:** all TC-01–10 pass under deterministic tests; the M1 vertical demo has evidence; target SSRF tests pass; external monitoring requires no hosting credential; M2 may consume confirmed incident/outbox events.
+**Exit gate:** every M1 assertion in the TC-01–10 allocation above passes with deterministic evidence, policy/data/security tests pass, and the fake shared-resource/stale-scheduler vertical demo has evidence; external monitoring requires no hosting credential. Full cross-milestone assertions remain unfinished requirements of their owning M2–M5 gates and complete TC-01–44 remains mandatory for Internal v1. M2 may consume confirmed incident/outbox events after authorization; pending events are not delivered notifications. This engineering gate amendment is explicitly Owner-approved in ADR-0006.
 
 ### M2 — Telegram and client action loop
 
@@ -355,7 +372,7 @@ M2 may start its domain/UI work as M1 stabilizes, but the end-to-end renewal/Tel
 - A Telegram callback cannot bypass dashboard-only mutation, RBAC, current scope/state, or duplicate-action guard.
 - Delivery failures remain visible/recoverable in the dashboard; `sent` means Bot API acceptance, not read receipt.
 
-**Exit gate:** TC-11–25/38 pass, all 10 templates have valid seed/version/mandatory-variable coverage, and the renewal demo is evidence-backed using fake/sandbox Telegram only. No production bot/destination is considered integrated before Owner configuration and explicit test delivery.
+**Exit gate:** TC-11–25/38 pass, all 10 templates have valid seed/version/mandatory-variable coverage, and the renewal demo is evidence-backed using fake/sandbox Telegram only. Also prove the allocated TC-03 canonical reminder, TC-05 destination down-delivery recovery guard, and TC-10 destination coalescing under deterministic transport/history tests. No production bot/destination is considered integrated before Owner configuration and explicit test delivery.
 
 ### M3 — Capability-aware connectors and verified backup
 
@@ -395,7 +412,7 @@ M2 may start its domain/UI work as M1 stabilizes, but the end-to-end renewal/Tel
 - Every download is account-scope checked, step-up gated, short-lived, audited, and absent from Telegram.
 - At least one supported path completes a sandbox isolated restore drill; no claim is made that all cPanel accounts can restore automatically.
 
-**Exit gate:** all TC-26–35/39–41 pass. Each connector state is labelled `validated_sandbox`, `live_unverified`, `unsupported_on_target`, or `not_configured`; only tested sandbox-supported paths may be called supported. M3 does not activate client production backup without recorded authorization and configuration.
+**Exit gate:** all TC-26–35/39–41 pass; also prove the allocated TC-03 shared account backup/impact/scoped download and TC-08 credentialed quota/capability/null invariants. Each connector state is labelled `validated_sandbox`, `live_unverified`, `unsupported_on_target`, or `not_configured`; only tested sandbox-supported paths may be called supported. M3 does not activate client production backup without recorded authorization and configuration.
 
 ### M4 — Audit, maintenance, operational resilience
 
@@ -431,7 +448,7 @@ M2 may start its domain/UI work as M1 stabilizes, but the end-to-end renewal/Tel
 - Write kill switch prevents new backup/retention writes while safe public observation continues; ongoing unknown work reconciles honestly.
 - OpsHub restoration pauses remote writes and preserves policy/template/evidence references.
 
-**Exit gate:** TC-36/37/40–43 pass; operational report/export and audit viewing respect scope/redaction; DR and watchdog runbooks are peer-reviewed; all P0/P1 requirements have a concrete implementation/test/evidence owner before a live pilot starts.
+**Exit gate:** TC-36/37/40–43 pass; operational report/export and audit viewing respect scope/redaction; DR and watchdog runbooks are peer-reviewed; TC-07's independent-watchdog contract and failure cases have deterministic evidence, with provisioning and separate-failure-domain alert proof explicitly owned by IP-M5-02/04. Full TC-07 remains unfinished until that operational evidence exists. All P0/P1 requirements have a concrete implementation/test/evidence owner before a live pilot starts.
 
 ### M5 — Internal pilot and hardening
 
@@ -578,8 +595,8 @@ All mock/sandbox data and UI badges must be clearly labelled. A fake adapter mus
 
 1. Periksa `AGENTS.md`, Git/worktree/upstream, [CHECKPOINT](CHECKPOINT.md) dan scope instruksi terakhir.
 2. Pilih task pertama yang belum selesai; gunakan dependency dan exit gate bagian 4. Jangan memulai ulang scaffold atau menghapus implementasi yang valid.
-3. Posisi saat ini: **IP-M1-10 exit-gate review**. Demo sudah passing; full TC-03/05/07 memiliki dependency lintas milestone yang belum diotorisasi untuk dijalankan pada scope M1.
-4. Setelah gate/urutan eksplisit diselesaikan dan ada instruksi lanjutan, kandidat berikutnya **IP-M2-01**: service subscription, expiry precision, renewal cycle, follow-up state. Dependensinya adalah M0 outbox/auth/security dan M1 canonical registry/subscription/policy/events.
+3. Posisi saat ini: **M1 MILESTONE_READY**, gate engineering sesuai scope dan ADR-0006 disetujui Owner. Full scenario lintas milestone tetap unfinished pada gate pemilik; review M1 tidak perlu diulang tanpa perubahan source/evidence.
+4. Penutupan M1 berhenti sebelum M2. Setelah instruksi milestone berikutnya, task pertama **IP-M2-01**: service subscription, expiry precision, renewal cycle, follow-up state. Dependensinya adalah M0 outbox/auth/security dan M1 canonical registry/subscription/policy/events; sequencing sudah terselesaikan, configuration/live evidence M2 tetap terpisah.
 5. Kerjakan pilihan teknis rutin secara mandiri dalam scope yang diotorisasi; catat actual evidence serta blocker. Missing live credential tidak menghalangi pekerjaan domain/fake test yang independen.
 
 ### 9.2 Checklist awal untuk repository baru (historis M0)

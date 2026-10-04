@@ -6,7 +6,7 @@ Berlaku untuk seluruh repository. Instruksi eksplisit user menentukan scope dan 
 
 1. Periksa `git status --short --branch`, branch/upstream, perubahan existing dan instruksi lokal yang lebih spesifik. Pertahankan perubahan user yang valid; jangan melakukan reset/clean, menghapus lock file atau membuat ulang scaffold tanpa instruksi.
 2. Baca [docs/PRD.md](docs/PRD.md) sebagai otoritas produk, [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) untuk urutan/dependency/acceptance, dan [docs/CHECKPOINT.md](docs/CHECKPOINT.md) untuk progres/evidence/runbook/next step. Keputusan arsitektur ada di [docs/adr/](docs/adr/).
-3. Snapshot 4 Oktober 2026: fondasi M0 implemented/tested; M1 registry/public observation implemented/tested; IP-M1-10 demo passing tetapi gate M1 `PARTIAL_WITH_BLOCKERS`. Full TC-03/05/07 memiliki dependency milestone berikutnya. M2–M5 belum dimulai. Verifikasi CHECKPOINT dan source sebelum mengandalkan snapshot ini.
+3. Snapshot 4 Oktober 2026 setelah persetujuan Owner [ADR-0006](docs/adr/0006-milestone-acceptance-sequencing.md): M0 dan M1 `MILESTONE_READY` dalam scope engineering lokal; IP-M1-01–10 implemented/tested. Full TC-03/05/07 serta bagian TC-08/10 tetap wajib pada milestone pemilik dan gate Internal v1; bukan pass penuh atau waiver. M2–M5 belum dimulai. Verifikasi CHECKPOINT dan source sebelum mengandalkan snapshot ini; penutupan M1 berhenti sebelum M2 sampai instruksi lanjutan.
 4. Pilih task belum selesai dalam scope yang diminta. Jangan masuk milestone berikutnya atau mengubah acceptance gate secara diam-diam. Scope dokumentasi tidak mengotorisasi implementasi fitur baru.
 
 ## 2. Peta repository dan pola implementasi
