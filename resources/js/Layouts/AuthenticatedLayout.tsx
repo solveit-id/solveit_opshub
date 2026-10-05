@@ -42,6 +42,9 @@ export default function Authenticated({
                                     <NavLink href={route('renewals.index', organization.id)} active={route().current('renewals.*') || route().current('followups.*') || route().current('client-templates.*')}>Renewal</NavLink>
                                 )}
                                 {organization && (
+                                    <NavLink href={route('backups.index', organization.id)} active={route().current('backups.*')}>Backup</NavLink>
+                                )}
+                                {organization && (
                                     <NavLink
                                         href={route('registry.page', organization.id)}
                                         active={route().current('registry.*')}
@@ -164,6 +167,7 @@ export default function Authenticated({
                             <ResponsiveNavLink href={route('renewals.index', organization.id)} active={route().current('renewals.*') || route().current('followups.*') || route().current('client-templates.*')}>Renewal</ResponsiveNavLink>
                         )}
                         {organization && canConfigureTelegram && <ResponsiveNavLink href={route('telegram.settings', organization.id)} active={route().current('telegram.*')}>Telegram</ResponsiveNavLink>}
+                        {organization && <ResponsiveNavLink href={route('backups.index', organization.id)} active={route().current('backups.*')}>Backup</ResponsiveNavLink>}
                         {organization && (
                             <ResponsiveNavLink
                                 href={route('registry.page', organization.id)}

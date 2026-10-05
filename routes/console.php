@@ -7,3 +7,4 @@ Schedule::job(new DispatchPendingOutboxEvents)->everyMinute();
 Schedule::command('opshub:monitoring:schedule')->everyMinute()->withoutOverlapping();
 Schedule::command('opshub:renewals:schedule')->everyMinute()->withoutOverlapping();
 Schedule::command('opshub:telegram:dispatch')->everyMinute()->withoutOverlapping();
+Schedule::command('opshub:backups:schedule')->everyMinute()->withoutOverlapping();

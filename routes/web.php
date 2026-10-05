@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\BackupArtifactController;
+use App\Http\Controllers\BackupPageController;
 use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\NotificationController;
@@ -26,6 +28,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified', 'owner.mfa'])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:project.read'])->group(function (): void {
+    Route::get('/organizations/{organization}/backups', [BackupPageController::class, 'index'])->name('backups.index');
+    Route::get('/organizations/{organization}/backups/download/{token}', [BackupArtifactController::class, 'download'])->middleware('step-up')->name('backups.download');
     Route::get('/organizations/{organization}/renewals', [RenewalPageController::class, 'index'])->name('renewals.index');
     Route::get('/organizations/{organization}/telegram', [TelegramConfigurationController::class, 'index'])->name('telegram.settings');
     Route::get('/organizations/{organization}/telegram-binding', [TelegramBindingController::class, 'index'])->name('telegram.binding');

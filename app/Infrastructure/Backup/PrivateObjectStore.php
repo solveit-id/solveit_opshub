@@ -20,4 +20,7 @@ interface PrivateObjectStore
     public function read(string $reference, string $version);
 
     public function delete(string $reference, string $version): void;
+
+    /** Exact immutable version: present, missing (authoritative), or unknown. */
+    public function presence(string $reference, string $version): string;
 }

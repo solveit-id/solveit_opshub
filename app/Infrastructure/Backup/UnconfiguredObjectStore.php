@@ -37,4 +37,9 @@ class UnconfiguredObjectStore implements PrivateObjectStore
     {
         throw new ConnectorFailure(ConnectorReason::NotConfigured);
     }
+
+    public function presence(string $reference, string $version): string
+    {
+        return 'unknown';
+    }
 }

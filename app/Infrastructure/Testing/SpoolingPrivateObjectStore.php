@@ -107,6 +107,11 @@ class SpoolingPrivateObjectStore implements PrivateObjectStore
         }
     }
 
+    public function presence(string $reference, string $version): string
+    {
+        return isset($this->objects[$this->id($reference, $version)]) ? 'present' : 'missing';
+    }
+
     private function id(string $reference, string $version): string
     {
         if (! str_starts_with($reference, 'store:') || ! Str::isUuid(substr($reference, 6)) || ! Str::isUuid($version)) {

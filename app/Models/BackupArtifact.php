@@ -12,7 +12,7 @@ class BackupArtifact extends Model
 
     protected $guarded = ['id'];
 
-    protected $hidden = ['object_reference', 'object_version', 'key_reference', 'manifest', 'sha256', 'encrypted_sha256'];
+    protected $hidden = ['object_reference', 'object_version', 'key_reference', 'manifest', 'sha256', 'encrypted_sha256', 'delete_lease', 'source_cleanup_lease'];
 
     protected function casts(): array
     {

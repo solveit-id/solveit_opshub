@@ -1,7 +1,9 @@
 <?php
 
 use App\Application\RenewalFollowups\FollowupWorkflow;
+use App\Http\Controllers\BackupArtifactController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\BackupPageController;
 use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\ConnectorController;
 use App\Http\Controllers\FollowupController;
@@ -23,6 +25,16 @@ Route::post('/telegram/webhook/{bot}', TelegramWebhookController::class)->whereN
 Route::middleware('web')->group(function (): void {
     Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])
         ->prefix('/v1/organizations/{organization}')->group(function (): void {
+            Route::get('/backups', [BackupPageController::class, 'index']);
+            Route::middleware('step-up')->group(function (): void {
+                Route::post('/backup-artifacts/{artifact}/download-link', [BackupArtifactController::class, 'issue']);
+                Route::post('/backup-artifacts/{artifact}/hold', [BackupArtifactController::class, 'hold']);
+                Route::post('/backup-artifacts/{artifact}/reconcile-deletion', [BackupArtifactController::class, 'reconcile']);
+                Route::post('/backup-artifacts/{artifact}/cleanup-source', [BackupArtifactController::class, 'cleanupSource']);
+                Route::post('/backup-policies/{policy}/retention', [BackupArtifactController::class, 'approveRetention']);
+                Route::post('/backup-policies/{policy}/retention-preview', [BackupArtifactController::class, 'preview']);
+                Route::post('/backup-retention-reports/{report}/apply', [BackupArtifactController::class, 'apply']);
+            });
             Route::get('/backup-runs/{run}', [BackupController::class, 'show']);
             Route::post('/backup-runs/{run}/reconcile', [BackupController::class, 'reconcile'])->middleware('step-up');
             Route::post('/backup-policies', [BackupController::class, 'configure'])->middleware('step-up');

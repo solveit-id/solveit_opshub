@@ -20,6 +20,7 @@ class BackupPolicySettings
             'retention' => ['required', 'array:daily,weekly,monthly'], 'retention.daily' => ['required', 'integer', 'min:1', 'max:365'],
             'retention.weekly' => ['required', 'integer', 'min:1', 'max:104'], 'retention.monthly' => ['required', 'integer', 'min:1', 'max:120'],
             'verification' => ['required', 'in:transport_verified,content_verified,restore_verified'],
+            'cleanup_temporary_source' => ['sometimes', 'boolean'],
             'max_bytes' => ['required', 'integer', 'min:1', 'max:1099511627776'],
             'bytes_per_second' => ['required', 'integer', 'min:65536', 'max:104857600'], 'max_seconds' => ['required', 'integer', 'min:30', 'max:3600'],
         ])->validate();
@@ -29,6 +30,7 @@ class BackupPolicySettings
             $included['path'] ??= '';
         }
         unset($included);
+        $data['cleanup_temporary_source'] = (bool) ($data['cleanup_temporary_source'] ?? false);
         foreach (['jitter_minutes', 'rpo_hours', 'max_bytes', 'bytes_per_second', 'max_seconds'] as $key) {
             $data[$key] = (int) $data[$key];
         }
@@ -51,6 +53,6 @@ class BackupPolicySettings
         return ['required_scopes' => ['files', 'database'], 'included_paths' => [['root_index' => 0, 'path' => '']], 'excluded_paths' => [],
             'timezone' => 'Asia/Jakarta', 'daily_at' => '02:00', 'jitter_minutes' => 30, 'rpo_hours' => 30,
             'destination_reference' => 'storage:unconfigured', 'retention' => ['daily' => 7, 'weekly' => 4, 'monthly' => 3],
-            'verification' => 'transport_verified', 'max_bytes' => 10737418240, 'bytes_per_second' => 1048576, 'max_seconds' => 3600];
+            'verification' => 'transport_verified', 'cleanup_temporary_source' => false, 'max_bytes' => 10737418240, 'bytes_per_second' => 1048576, 'max_seconds' => 3600];
     }
 }
