@@ -9,6 +9,8 @@ use App\Infrastructure\Backup\SftpFileBundle;
 use App\Infrastructure\Connectors\ConnectorFailure;
 use App\Infrastructure\Connectors\ConnectorResult;
 use App\Jobs\RunSftpBackup;
+use App\Jobs\VerifyBackup;
+use App\Models\BackupArtifact;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
 use App\Models\Connector;
@@ -76,6 +78,9 @@ class SftpBackupFlow
                     'source_status' => $reason ? 'partial' : 'files_read', 'transfer_status' => $reason ? 'unverified' : 'stored_unverified',
                     'transfer_manifest' => $manifest, 'transferred_bytes' => $manifest['bytes'] ?? 0, 'transferred_files' => $manifest['file_count'] ?? 0,
                     'transfer_errors' => count($manifest['errors'] ?? [])]);
+                if (! $reason && BackupArtifact::where('backup_run_id', $current->id)->where('state', 'stored')->exists()) {
+                    VerifyBackup::dispatch($current->id)->onConnection('database')->onQueue('backup');
+                }
             });
         } catch (\Throwable $error) {
             $this->execution->locked($run->id, function (BackupRun $current) use ($token, $manifest, $error, $connector): void {

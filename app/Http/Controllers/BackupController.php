@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Application\Backups\BackupPolicies;
+use App\Application\Backups\BackupReconciliation;
 use App\Application\Backups\BackupRuns;
-use App\Application\Backups\CpanelBackupFlow;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
 use App\Models\Connector;
@@ -15,7 +15,7 @@ class BackupController extends Controller
 {
     public function reconcile(Request $request, Organization $organization, BackupRun $run)
     {
-        app(CpanelBackupFlow::class)->enqueueReconcile($organization, $request->user(), $run);
+        app(BackupReconciliation::class)->enqueue($organization, $request->user(), $run);
 
         return response()->json(['data' => ['state' => 'queued']], 202);
     }

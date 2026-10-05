@@ -17,6 +17,8 @@ use App\Infrastructure\Connectors\ConnectorReason;
 use App\Infrastructure\Connectors\ConnectorResult;
 use App\Jobs\PreflightBackup;
 use App\Jobs\RunCpanelBackup;
+use App\Jobs\VerifyBackup;
+use App\Models\BackupArtifact;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
 use App\Models\BackupSourceOperation;
@@ -251,6 +253,9 @@ class CpanelBackupFlow
                 }
                 $operation->update(['state' => 'retrieved']);
                 $this->execution->finish($current, $token, ['state' => 'verifying', 'source_status' => 'retrieved', 'transfer_status' => 'stored_unverified', 'reason_code' => null]);
+                if (BackupArtifact::where('backup_run_id', $current->id)->where('state', 'stored')->exists()) {
+                    VerifyBackup::dispatch($current->id)->onConnection('database')->onQueue('backup');
+                }
             });
         } catch (\Throwable $error) {
             $this->execution->locked($run->id, function (BackupRun $current) use ($token, $error): void {

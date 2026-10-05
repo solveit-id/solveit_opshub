@@ -3,15 +3,19 @@
 namespace App\Providers;
 
 use App\Infrastructure\Backup\BackupCapacity;
+use App\Infrastructure\Backup\BackupKeyResolver;
 use App\Infrastructure\Backup\BackupSink;
 use App\Infrastructure\Backup\CpanelBackupSource;
 use App\Infrastructure\Backup\CpanelSourceArtifacts;
+use App\Infrastructure\Backup\EncryptedBackupSink;
 use App\Infrastructure\Backup\MonotonicTransferClock;
 use App\Infrastructure\Backup\NativeCpanelBackupSource;
+use App\Infrastructure\Backup\PrivateObjectStore;
 use App\Infrastructure\Backup\TransferClock;
 use App\Infrastructure\Backup\UnavailableBackupCapacity;
-use App\Infrastructure\Backup\UnconfiguredBackupSink;
+use App\Infrastructure\Backup\UnconfiguredBackupKeys;
 use App\Infrastructure\Backup\UnconfiguredCpanelArtifacts;
+use App\Infrastructure\Backup\UnconfiguredObjectStore;
 use App\Infrastructure\Connectors\ConnectorSecretResolver;
 use App\Infrastructure\Connectors\Cpanel\CpanelBackupTransport;
 use App\Infrastructure\Connectors\Cpanel\CpanelTransport;
@@ -50,7 +54,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CpanelBackupTransport::class, NativeCpanelTransport::class);
         $this->app->bind(CpanelBackupSource::class, NativeCpanelBackupSource::class);
         $this->app->bind(CpanelSourceArtifacts::class, UnconfiguredCpanelArtifacts::class);
-        $this->app->bind(BackupSink::class, UnconfiguredBackupSink::class);
+        $this->app->bind(PrivateObjectStore::class, UnconfiguredObjectStore::class);
+        $this->app->bind(BackupKeyResolver::class, UnconfiguredBackupKeys::class);
+        $this->app->bind(BackupSink::class, EncryptedBackupSink::class);
         $this->app->bind(ConnectorSecretResolver::class, EnvironmentConnectorSecrets::class);
         $this->app->bind(CpanelTransport::class, NativeCpanelTransport::class);
         $this->app->bind(SftpSessionFactory::class, NativeSftpSessionFactory::class);
