@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\Backups\BackupPolicies;
 use App\Application\Backups\BackupRuns;
+use App\Application\Backups\CpanelBackupFlow;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
 use App\Models\Connector;
@@ -12,6 +13,13 @@ use Illuminate\Http\Request;
 
 class BackupController extends Controller
 {
+    public function reconcile(Request $request, Organization $organization, BackupRun $run)
+    {
+        app(CpanelBackupFlow::class)->enqueueReconcile($organization, $request->user(), $run);
+
+        return response()->json(['data' => ['state' => 'queued']], 202);
+    }
+
     public function configure(Request $request, Organization $organization)
     {
         $data = $request->validate(['connector_id' => ['required', 'integer'], 'settings' => ['required', 'array'], 'enabled' => ['required', 'boolean'], 'version' => ['nullable', 'integer', 'min:1']]);

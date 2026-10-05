@@ -25,6 +25,7 @@ enum ConnectorReason: string
     case ResponseInvalid = 'RESPONSE_INVALID';
     case LimitExceeded = 'LIMIT_EXCEEDED';
     case ReconcileRequired = 'RECONCILE_REQUIRED';
+    case WritePaused = 'WRITE_PAUSED';
 
     public function message(): string
     {

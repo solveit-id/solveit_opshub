@@ -10,6 +10,7 @@ use App\Application\Registry\ManagementAuthorizationService;
 use App\Infrastructure\Backup\BackupCapacity;
 use App\Infrastructure\Backup\CapacitySnapshot;
 use App\Jobs\PreflightBackup;
+use App\Jobs\RunCpanelBackup;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
 use App\Models\Connector;
@@ -117,6 +118,9 @@ class BackupRuns
                 'lease_owner' => null, 'leased_until' => null, 'completed_at' => $reason ? now('UTC') : null]);
             DB::table('backup_run_attempts')->where('backup_run_id', $run->id)->where('number', $run->attempts)
                 ->update(['state' => 'finished', 'reason_code' => $reason, 'completed_at' => now('UTC')]);
+            if (! $reason && $connector->kind === 'cpanel') {
+                RunCpanelBackup::dispatch($run->id)->onConnection('database')->onQueue('backup');
+            }
         });
     }
 

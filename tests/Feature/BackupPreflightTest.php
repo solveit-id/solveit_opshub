@@ -132,11 +132,11 @@ class BackupPreflightTest extends TestCase
         [$org, $owner, , $policy, $connector, , $capacity] = $this->fixture();
         $service = app(BackupRuns::class);
         $run = $service->enqueue($org, $owner, $policy, 1, 'auth-recheck-key');
-        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now()->subSecond()]);
+        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now('UTC')->subSecond()]);
         $service->preflight($run->id);
         $this->assertSame('AUTHORIZATION_EXPIRED', $run->fresh()->reason_code);
         $this->assertSame(0, $capacity->calls);
-        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now()->addDay()]);
+        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now('UTC')->addDay()]);
         $run = $service->enqueue($org, $owner, $policy, 1, 'version-recheck-key');
         $connector->update(['version' => 2]);
         $service->preflight($run->id);

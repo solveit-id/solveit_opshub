@@ -14,7 +14,7 @@ class ManagementAuthorizationService
             ->where('resource_type', $resourceType)
             ->where('resource_id', $resourceId)
             ->whereJsonContains('allowed_action_classes', $actionClass)
-            ->where(fn ($query) => $query->whereNull('valid_until')->orWhere('valid_until', '>', now()))
+            ->where(fn ($query) => $query->whereNull('valid_until')->orWhere('valid_until', '>', now('UTC')))
             ->exists();
     }
 }

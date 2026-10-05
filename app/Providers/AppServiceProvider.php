@@ -3,8 +3,15 @@
 namespace App\Providers;
 
 use App\Infrastructure\Backup\BackupCapacity;
+use App\Infrastructure\Backup\BackupSink;
+use App\Infrastructure\Backup\CpanelBackupSource;
+use App\Infrastructure\Backup\CpanelSourceArtifacts;
+use App\Infrastructure\Backup\NativeCpanelBackupSource;
 use App\Infrastructure\Backup\UnavailableBackupCapacity;
+use App\Infrastructure\Backup\UnconfiguredBackupSink;
+use App\Infrastructure\Backup\UnconfiguredCpanelArtifacts;
 use App\Infrastructure\Connectors\ConnectorSecretResolver;
+use App\Infrastructure\Connectors\Cpanel\CpanelBackupTransport;
 use App\Infrastructure\Connectors\Cpanel\CpanelTransport;
 use App\Infrastructure\Connectors\Cpanel\NativeCpanelTransport;
 use App\Infrastructure\Connectors\EnvironmentConnectorSecrets;
@@ -37,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(BackupCapacity::class, UnavailableBackupCapacity::class);
+        $this->app->bind(CpanelBackupTransport::class, NativeCpanelTransport::class);
+        $this->app->bind(CpanelBackupSource::class, NativeCpanelBackupSource::class);
+        $this->app->bind(CpanelSourceArtifacts::class, UnconfiguredCpanelArtifacts::class);
+        $this->app->bind(BackupSink::class, UnconfiguredBackupSink::class);
         $this->app->bind(ConnectorSecretResolver::class, EnvironmentConnectorSecrets::class);
         $this->app->bind(CpanelTransport::class, NativeCpanelTransport::class);
         $this->app->bind(SftpSessionFactory::class, NativeSftpSessionFactory::class);

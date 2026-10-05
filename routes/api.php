@@ -24,6 +24,7 @@ Route::middleware('web')->group(function (): void {
     Route::middleware(['auth', 'verified', 'owner.mfa', 'active.user', 'organization.access:organization.read'])
         ->prefix('/v1/organizations/{organization}')->group(function (): void {
             Route::get('/backup-runs/{run}', [BackupController::class, 'show']);
+            Route::post('/backup-runs/{run}/reconcile', [BackupController::class, 'reconcile'])->middleware('step-up');
             Route::post('/backup-policies', [BackupController::class, 'configure'])->middleware('step-up');
             Route::post('/backup-policies/{policy}/runs', [BackupController::class, 'enqueue'])->middleware('step-up');
             Route::post('/backup-write-control', [BackupController::class, 'pause'])->middleware('step-up');

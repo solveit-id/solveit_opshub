@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Connectors\Cpanel;
 
+use App\Infrastructure\Backup\BackupWritePermit;
 use App\Infrastructure\Connectors\ConnectorConfig;
 use App\Infrastructure\Connectors\ConnectorReason;
 use App\Infrastructure\Connectors\ConnectorSecretResolver;
@@ -10,11 +11,25 @@ use App\Infrastructure\Security\LiveConnectorGate;
 use DomainException;
 use Throwable;
 
-class NativeCpanelTransport implements CpanelTransport
+class NativeCpanelTransport implements CpanelBackupTransport, CpanelTransport
 {
     public function __construct(private readonly ConnectorTargetGuard $targets, private readonly ConnectorSecretResolver $secrets) {}
 
     public function read(ConnectorConfig $config, CpanelRead $operation): CpanelResponse
+    {
+        return $this->send($config, $operation);
+    }
+
+    public function request(ConnectorConfig $config, BackupWritePermit $permit): CpanelResponse
+    {
+        if (! app()->runningInConsole() || ! config('opshub.live_connectors_enabled') || ! $permit->allows($config)) {
+            return new CpanelResponse(0, error: ConnectorReason::NotConfigured);
+        }
+
+        return $this->send($config, CpanelWrite::FullBackupToHome);
+    }
+
+    private function send(ConnectorConfig $config, CpanelRead|CpanelWrite $operation): CpanelResponse
     {
         if (! app()->runningInConsole() || $config->kind !== 'cpanel' || ! config('opshub.live_connectors_enabled')) {
             return new CpanelResponse(0, error: ConnectorReason::NotConfigured);

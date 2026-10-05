@@ -16,6 +16,6 @@ class BackupRun extends Model
 
     protected function casts(): array
     {
-        return ['policy_snapshot' => 'array', 'impacted_project_ids' => 'array', 'preflight_evidence' => 'array', 'fake' => 'boolean', 'leased_until' => 'immutable_datetime', 'completed_at' => 'immutable_datetime'];
+        return ['policy_snapshot' => 'array', 'impacted_project_ids' => 'array', 'preflight_evidence' => 'array', 'fake' => 'boolean', 'source_next_at' => 'immutable_datetime', 'leased_until' => 'immutable_datetime', 'completed_at' => 'immutable_datetime'];
     }
 }

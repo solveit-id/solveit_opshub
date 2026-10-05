@@ -28,7 +28,7 @@ class CapabilityRecorder
                 'status' => $result->status, 'reason_code' => $result->reasonCode, 'retryable' => $result->retryable,
                 'source' => $result->fake ? 'fake' : 'provider', 'observed_at' => $result->observedAt, 'evidence' => $result->evidence]);
             // Late observation may be kept as evidence, but may never reverse a newer connection state.
-            if (in_array($operation, ['validate', 'discover', 'read'], true)
+            if ((in_array($operation, ['validate', 'discover', 'read'], true) || in_array($result->reasonCode, ['AUTH_FAILED', 'PERMISSION_DENIED'], true))
                 && (! $connector->last_tested_at || $result->observedAt->greaterThanOrEqualTo($connector->last_tested_at))
                 && $connector->state !== 'disabled') {
                 $before = $connector->state;

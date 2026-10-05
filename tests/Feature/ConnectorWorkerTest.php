@@ -141,12 +141,12 @@ class ConnectorWorkerTest extends TestCase
         $transport = new ScriptedCpanelTransport([$this->ok()]);
         app()->instance(CpanelTransport::class, $transport);
         $run = $service->enqueue($org, $owner, $connector, 1, 'revoked-scope-key');
-        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now()->subSecond()]);
+        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now('UTC')->subSecond()]);
         $service->execute($run->id);
         $this->assertSame('cancelled', $run->fresh()->state);
         $this->assertSame([], $transport->calls);
         $this->travel(31)->seconds();
-        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now()->addDay()]);
+        ManagementAuthorization::where('resource_id', $connector->hosting_account_id)->update(['valid_until' => now('UTC')->addDay()]);
         $run2 = $service->enqueue($org, $owner, $connector, 1, 'stale-version-key');
         $connector->update(['version' => 2]);
         $service->execute($run2->id);
