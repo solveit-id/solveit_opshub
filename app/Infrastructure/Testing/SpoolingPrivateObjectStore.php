@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Testing;
 
+use App\Infrastructure\Backup\BackupDeletionPermit;
 use App\Infrastructure\Backup\PrivateObjectStore;
 use App\Infrastructure\Connectors\ConnectorFailure;
 use App\Infrastructure\Connectors\ConnectorReason;
@@ -22,6 +23,10 @@ class SpoolingPrivateObjectStore implements PrivateObjectStore
     public ?\Closure $afterCommit = null;
 
     public ?\Closure $beforeRead = null;
+
+    public ?\Closure $afterDelete = null;
+
+    public ?\Closure $beforeDelete = null;
 
     public function __construct()
     {
@@ -98,12 +103,19 @@ class SpoolingPrivateObjectStore implements PrivateObjectStore
         return $copy;
     }
 
-    public function delete(string $reference, string $version): void
+    public function delete(string $reference, string $version, BackupDeletionPermit $permit): void
     {
         $id = $this->id($reference, $version);
+        if ($this->beforeDelete) {
+            ($this->beforeDelete)();
+        }
+        $permit->authorize();
         if (isset($this->objects[$id])) {
             fclose($this->objects[$id]);
             unset($this->objects[$id]);
+        }
+        if ($this->afterDelete) {
+            ($this->afterDelete)();
         }
     }
 

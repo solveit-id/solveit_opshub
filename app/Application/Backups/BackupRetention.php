@@ -5,7 +5,9 @@ namespace App\Application\Backups;
 use App\Application\ActivityEvidence\AuditWriter;
 use App\Application\IdentityAccess\ProjectAccess;
 use App\Application\Registry\ManagementAuthorizationService;
+use App\Infrastructure\Backup\BackupDeletionPermit;
 use App\Infrastructure\Backup\PrivateObjectStore;
+use App\Infrastructure\Backup\TransferClock;
 use App\Jobs\ApplyBackupRetention;
 use App\Models\BackupArtifact;
 use App\Models\BackupPolicy;
@@ -103,9 +105,16 @@ class BackupRetention
             return;
         }
         $results = [];
+        $clock = app(TransferClock::class);
+        $deadline = $clock->seconds() + 45;
         foreach ($report->decisions as $decision) {
             if ($decision['decision'] !== 'delete') {
                 continue;
+            }
+            if ($clock->seconds() >= $deadline) {
+                $report->update(['state' => 'partial', 'results' => $results]);
+
+                return;
             }
             $artifact = BackupArtifact::findOrFail($decision['artifact_id']);
             try {
@@ -127,7 +136,7 @@ class BackupRetention
                         return null;
                     }
                     $token = (string) Str::uuid();
-                    $artifact->update(['state' => 'deleting', 'delete_lease' => $token, 'version' => $artifact->version + 1]);
+                    $artifact->update(['state' => 'deleting', 'delete_lease' => $token, 'delete_leased_until' => now('UTC')->addSeconds(90), 'version' => $artifact->version + 1]);
 
                     return [$artifact, $token];
                 });
@@ -139,25 +148,48 @@ class BackupRetention
             }
             if (! $claim) {
                 $results[] = ['artifact_id' => $artifact->id, 'state' => 'skipped_after_recheck'];
+                $report->update(['results' => $results]);
 
                 continue;
             }
             [$artifact, $token] = $claim;
+            $permit = new BackupDeletionPermit(function () use ($artifact, $token, $report, $deadline, $clock): void {
+                app(BackupExecution::class)->locked($artifact->backup_run_id, function ($run) use ($artifact, $token, $report, $deadline, $clock): void {
+                    $current = $artifact->fresh();
+                    $policy = BackupPolicy::findOrFail($report->backup_policy_id);
+                    $org = Organization::findOrFail($report->organization_id);
+                    $actor = User::findOrFail($report->actor_user_id);
+                    $this->owner($org, $actor, $policy);
+                    app(BackupArtifactAccess::class)->require($org, $actor, $current);
+                    abort_unless($current->state === 'deleting' && $current->delete_lease === $token && $current->delete_leased_until?->isFuture()
+                        && $policy->enabled && $policy->version === $report->policy_version && $report->expires_at->isFuture()
+                        && $clock->seconds() < $deadline && ! app(BackupPolicies::class)->paused($org->id)
+                        && app(ManagementAuthorizationService::class)->allows($org, 'hosting_account', $run->hosting_account_id, 'backup')
+                        && array_diff($this->protected($current), ['unverified_or_uncertain']) === [] && app(BackupArtifactAccess::class)->protection($run), 409);
+                });
+            });
             try {
-                app(PrivateObjectStore::class)->delete($artifact->object_reference, $artifact->object_version);
+                app(PrivateObjectStore::class)->delete($artifact->object_reference, $artifact->object_version, $permit);
+                if (! $permit->authorized()) {
+                    throw new \LogicException('Storage adapter did not consume deletion authorization.');
+                }
                 $state = 'deleted';
             } catch (\Throwable) {
-                $state = 'delete_unknown';
+                $state = $permit->authorized() ? 'delete_unknown' : 'verified';
             }
             app(BackupExecution::class)->locked($artifact->backup_run_id, function () use ($artifact, $token, $state, $report): void {
                 $current = $artifact->fresh();
                 if ($current->delete_lease !== $token || $current->state !== 'deleting') {
                     return;
                 }
-                $current->update(['state' => $state, 'deleted_at' => $state === 'deleted' ? now('UTC') : null, 'delete_lease' => null, 'reason_code' => $state === 'deleted' ? null : 'STORAGE_DELETE_UNKNOWN']);
+                $current->update(['state' => $state, 'deleted_at' => $state === 'deleted' ? now('UTC') : null, 'delete_lease' => null, 'delete_leased_until' => null,
+                    'reason_code' => $state === 'deleted' ? null : ($state === 'verified' ? 'RETENTION_WRITE_BLOCKED' : 'STORAGE_DELETE_UNKNOWN')]);
+                $report->refresh()->update(['results' => [...($report->results ?? []), ['artifact_id' => $artifact->id, 'state' => $state]]]);
                 app(AuditWriter::class)->write(Organization::findOrFail($report->organization_id), 'backup.retention.deleted', 'backup_artifact', $current->id, $state, User::findOrFail($report->actor_user_id));
             });
             $results[] = ['artifact_id' => $artifact->id, 'state' => $state];
+            // Preserve completed effects if the worker dies before finishing the report.
+            $report->update(['results' => $results]);
         }
         $report->update(['state' => 'completed', 'results' => $results]);
     }
@@ -191,15 +223,16 @@ class BackupRetention
             $artifact = $artifact->fresh();
             app(BackupArtifactAccess::class)->require($org, $actor, $artifact);
             abort_unless($artifact->version === $version && in_array($artifact->state, ['deleting', 'delete_unknown'], true), 409);
+            abort_if($artifact->state === 'deleting' && (! $artifact->delete_leased_until || $artifact->delete_leased_until->isFuture()), 409, 'Deletion lease has not expired.');
             abort_unless(app(BackupArtifactAccess::class)->protection($run), 409);
             $store = app(PrivateObjectStore::class);
             $presence = $store->presence($artifact->object_reference, $artifact->object_version);
             if ($presence === 'present') {
                 $meta = $store->metadata($artifact->object_reference, $artifact->object_version);
                 abort_unless(($meta['version'] ?? null) === $artifact->object_version && ($meta['sha256'] ?? null) === $artifact->encrypted_sha256 && ($meta['bytes'] ?? null) === $artifact->encrypted_bytes, 409);
-                $artifact->update(['state' => 'verified', 'delete_lease' => null, 'reason_code' => null, 'version' => $version + 1]);
+                $artifact->update(['state' => 'verified', 'delete_lease' => null, 'delete_leased_until' => null, 'reason_code' => null, 'version' => $version + 1]);
             } elseif ($presence === 'missing') {
-                $artifact->update(['state' => 'deleted', 'delete_lease' => null, 'deleted_at' => now('UTC'), 'reason_code' => null, 'version' => $version + 1]);
+                $artifact->update(['state' => 'deleted', 'delete_lease' => null, 'delete_leased_until' => null, 'deleted_at' => now('UTC'), 'reason_code' => null, 'version' => $version + 1]);
             }
             app(AuditWriter::class)->write($org, 'backup.retention.reconciled', 'backup_artifact', $artifact->id, $presence, $actor);
 

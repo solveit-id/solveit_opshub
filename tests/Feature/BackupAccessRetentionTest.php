@@ -10,6 +10,7 @@ use App\Application\Backups\BackupScheduler;
 use App\Application\Backups\BackupVerification;
 use App\Application\Backups\SftpBackupFlow;
 use App\Domain\IdentityAccess\Role;
+use App\Infrastructure\Backup\BackupDeletionPermit;
 use App\Infrastructure\Backup\TemporarySourceCleaner;
 use App\Models\AssetUsage;
 use App\Models\BackupArtifact;
@@ -128,8 +129,8 @@ class BackupAccessRetentionTest extends TestCase
         $artifact->update(['state' => 'delete_unknown', 'version' => 2]);
         $retention = app(BackupRetention::class);
         $this->assertSame('verified', $retention->reconcile($org, $owner, $artifact, 2)->state);
-        $artifact->refresh()->update(['state' => 'deleting', 'version' => 4]);
-        $store->delete($artifact->object_reference, $artifact->object_version);
+        $artifact->refresh()->update(['state' => 'deleting', 'version' => 4, 'delete_leased_until' => now('UTC')->subSecond()]);
+        $store->delete($artifact->object_reference, $artifact->object_version, new BackupDeletionPermit(fn () => null)); // Explicit external-effect fixture.
         $this->assertSame('deleted', $retention->reconcile($org, $owner, $artifact, 4)->state);
         $this->assertNotNull($artifact->fresh()->deleted_at);
         $artifact->refresh()->update(['deleted_at' => null, 'state' => 'stored']);
@@ -200,11 +201,13 @@ class BackupAccessRetentionTest extends TestCase
                 return $this->owned;
             }
 
-            public function deleteOwned(BackupRun $run, BackupArtifact $artifact): void
+            public function deleteOwned(BackupRun $run, BackupArtifact $artifact, BackupDeletionPermit $permit): void
             {
                 if (! $this->owned) {
                     throw new \LogicException;
-                } $this->deletes++;
+                }
+                $permit->authorize();
+                $this->deletes++;
             }
         };
         app()->instance(TemporarySourceCleaner::class, $cleaner);

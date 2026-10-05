@@ -19,7 +19,8 @@ interface PrivateObjectStore
     /** Bounded reads through private stream, no public provider URL. */
     public function read(string $reference, string $version);
 
-    public function delete(string $reference, string $version): void;
+    /** Consume permit immediately before deleting the immutable version, with bounded provider timeout. */
+    public function delete(string $reference, string $version, BackupDeletionPermit $permit): void;
 
     /** Exact immutable version: present, missing (authoritative), or unknown. */
     public function presence(string $reference, string $version): string;

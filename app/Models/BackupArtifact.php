@@ -17,7 +17,7 @@ class BackupArtifact extends Model
     protected function casts(): array
     {
         return ['environment_ids' => 'array', 'manifest' => 'array', 'coverage_scopes' => 'array', 'fake' => 'boolean', 'legal_hold' => 'boolean',
-            'restore_pending' => 'boolean', 'source_observed_at' => 'immutable_datetime', 'verified_at' => 'immutable_datetime', 'deleted_at' => 'immutable_datetime'];
+            'restore_pending' => 'boolean', 'source_observed_at' => 'immutable_datetime', 'verified_at' => 'immutable_datetime', 'deleted_at' => 'immutable_datetime', 'delete_leased_until' => 'immutable_datetime'];
     }
 
     public function context(): string

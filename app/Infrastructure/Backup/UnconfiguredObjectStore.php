@@ -33,7 +33,7 @@ class UnconfiguredObjectStore implements PrivateObjectStore
         throw new ConnectorFailure(ConnectorReason::NotConfigured);
     }
 
-    public function delete(string $reference, string $version): void
+    public function delete(string $reference, string $version, BackupDeletionPermit $permit): void
     {
         throw new ConnectorFailure(ConnectorReason::NotConfigured);
     }

@@ -12,6 +12,6 @@ interface TemporarySourceCleaner
     /** Provider adapter must prove immutable archive/run/account ownership, never infer from a filename. */
     public function owned(BackupRun $run, BackupArtifact $artifact): bool;
 
-    /** Recheck ownership atomically at deletion; never delete operator/provider-owned archives. */
-    public function deleteOwned(BackupRun $run, BackupArtifact $artifact): void;
+    /** Recheck immutable ownership and consume permit immediately before deletion; no intervening I/O. */
+    public function deleteOwned(BackupRun $run, BackupArtifact $artifact, BackupDeletionPermit $permit): void;
 }

@@ -17,7 +17,7 @@ class UnconfiguredSourceCleaner implements TemporarySourceCleaner
         return false;
     }
 
-    public function deleteOwned(BackupRun $run, BackupArtifact $artifact): void
+    public function deleteOwned(BackupRun $run, BackupArtifact $artifact, BackupDeletionPermit $permit): void
     {
         throw new \LogicException('Native source ownership/delete protocol is not configured.');
     }

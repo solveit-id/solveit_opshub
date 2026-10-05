@@ -80,7 +80,7 @@ class BackupScheduler
                     $report = app(BackupRetention::class)->dryRun($org, $actor, $policy);
                     $report->update(['schedule_key' => $key]);
                     app(BackupRetention::class)->enqueue($org, $actor, $report);
-                } catch (HttpException|\Illuminate\Auth\Access\AuthorizationException) {
+                } catch (HttpException|AuthorizationException) {
                     return 0;
                 }
 
