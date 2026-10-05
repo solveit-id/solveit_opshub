@@ -12,10 +12,10 @@ class BackupRun extends Model
 
     protected $guarded = ['id'];
 
-    protected $hidden = ['policy_snapshot', 'idempotency_key', 'request_digest', 'lease_owner'];
+    protected $hidden = ['policy_snapshot', 'idempotency_key', 'request_digest', 'lease_owner', 'transfer_manifest'];
 
     protected function casts(): array
     {
-        return ['policy_snapshot' => 'array', 'impacted_project_ids' => 'array', 'preflight_evidence' => 'array', 'fake' => 'boolean', 'source_next_at' => 'immutable_datetime', 'leased_until' => 'immutable_datetime', 'completed_at' => 'immutable_datetime'];
+        return ['policy_snapshot' => 'array', 'impacted_project_ids' => 'array', 'preflight_evidence' => 'array', 'transfer_manifest' => 'array', 'fake' => 'boolean', 'source_next_at' => 'immutable_datetime', 'leased_until' => 'immutable_datetime', 'completed_at' => 'immutable_datetime'];
     }
 }

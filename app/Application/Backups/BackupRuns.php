@@ -11,6 +11,7 @@ use App\Infrastructure\Backup\BackupCapacity;
 use App\Infrastructure\Backup\CapacitySnapshot;
 use App\Jobs\PreflightBackup;
 use App\Jobs\RunCpanelBackup;
+use App\Jobs\RunSftpBackup;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
 use App\Models\Connector;
@@ -120,6 +121,8 @@ class BackupRuns
                 ->update(['state' => 'finished', 'reason_code' => $reason, 'completed_at' => now('UTC')]);
             if (! $reason && $connector->kind === 'cpanel') {
                 RunCpanelBackup::dispatch($run->id)->onConnection('database')->onQueue('backup');
+            } elseif (! $reason && $connector->kind === 'sftp') {
+                RunSftpBackup::dispatch($run->id)->onConnection('database')->onQueue('backup');
             }
         });
     }

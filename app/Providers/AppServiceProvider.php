@@ -6,7 +6,9 @@ use App\Infrastructure\Backup\BackupCapacity;
 use App\Infrastructure\Backup\BackupSink;
 use App\Infrastructure\Backup\CpanelBackupSource;
 use App\Infrastructure\Backup\CpanelSourceArtifacts;
+use App\Infrastructure\Backup\MonotonicTransferClock;
 use App\Infrastructure\Backup\NativeCpanelBackupSource;
+use App\Infrastructure\Backup\TransferClock;
 use App\Infrastructure\Backup\UnavailableBackupCapacity;
 use App\Infrastructure\Backup\UnconfiguredBackupSink;
 use App\Infrastructure\Backup\UnconfiguredCpanelArtifacts;
@@ -44,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(BackupCapacity::class, UnavailableBackupCapacity::class);
+        $this->app->bind(TransferClock::class, MonotonicTransferClock::class);
         $this->app->bind(CpanelBackupTransport::class, NativeCpanelTransport::class);
         $this->app->bind(CpanelBackupSource::class, NativeCpanelBackupSource::class);
         $this->app->bind(CpanelSourceArtifacts::class, UnconfiguredCpanelArtifacts::class);

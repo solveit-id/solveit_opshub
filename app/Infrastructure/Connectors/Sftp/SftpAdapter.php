@@ -14,6 +14,20 @@ class SftpAdapter implements ConnectorAdapter
 {
     public function __construct(private SftpSessionFactory $sessions, private RemotePathGuard $paths) {}
 
+    public function fake(): bool
+    {
+        return $this->sessions->fake();
+    }
+
+    public function metadata(ConnectorConfig $config, string $root, string $relative): array
+    {
+        return $this->session($config, function (SftpSession $session) use ($config, $root, $relative): array {
+            [, $stat] = $this->paths->resolve($session, $config, $root, $relative);
+
+            return $stat;
+        });
+    }
+
     public function validateConfig(ConnectorConfig $config): ConnectorResult
     {
         return $this->inspect($config, Capability::Connection);
@@ -44,13 +58,13 @@ class SftpAdapter implements ConnectorAdapter
     }
 
     /** Private worker data only, never provider path/content evidence for UI or Telegram. */
-    public function listing(ConnectorConfig $config, string $root, string $relative = '', int $limit = 1000): array
+    public function listing(ConnectorConfig $config, string $root, string $relative = '', int $limit = 1000, array $excluded = []): array
     {
         if ($limit < 1 || $limit > 5000) {
             throw new ConnectorFailure(ConnectorReason::LimitExceeded);
         }
 
-        return $this->session($config, function (SftpSession $session) use ($config, $root, $relative, $limit): array {
+        return $this->session($config, function (SftpSession $session) use ($config, $root, $relative, $limit, $excluded): array {
             [$path] = $this->paths->resolve($session, $config, $root, $relative, 2);
             $list = $session->listing($path, $limit);
             $this->paths->resolve($session, $config, $root, $relative, 2);
@@ -63,10 +77,19 @@ class SftpAdapter implements ConnectorAdapter
                     throw new ConnectorFailure(ConnectorReason::PathBlocked);
                 }
                 $child = ($relative === '' ? '' : $relative.'/').$name;
-                [, $stat] = $this->paths->resolve($session, $config, $root, $child);
                 if (count($result) >= $limit) {
                     throw new ConnectorFailure(ConnectorReason::LimitExceeded);
                 }
+                $skip = false;
+                foreach ($excluded as $exclude) {
+                    $skip = $skip || $child === $exclude || str_starts_with($child, $exclude.'/');
+                }
+                if ($skip) {
+                    $result[] = ['path' => $child, 'type' => 0, 'excluded' => true];
+
+                    continue; // Approved exclusion does not stat or follow the child.
+                }
+                [, $stat] = $this->paths->resolve($session, $config, $root, $child);
                 $result[] = ['path' => $child, 'type' => $stat['type'], 'size' => $stat['size'] ?? null, 'mtime' => $stat['mtime'] ?? null];
             }
 
