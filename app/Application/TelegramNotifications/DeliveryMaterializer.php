@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class DeliveryMaterializer
 {
-    public const EVENTS = ['telegram.notification.requested', 'telegram.test_requested', 'incident.opened', 'incident.stability_warning', 'incident.resolved', 'renewal.reminder', 'renewal.verification_required', 'renewal.verified', 'connector.failed'];
+    public const EVENTS = ['telegram.notification.requested', 'telegram.test_requested', 'incident.opened', 'incident.stability_warning', 'incident.resolved', 'renewal.reminder', 'renewal.verification_required', 'renewal.verified', 'connector.failed', 'backup.issue.opened'];
 
     public function materialize(Organization $org, ?CarbonImmutable $now = null): int
     {

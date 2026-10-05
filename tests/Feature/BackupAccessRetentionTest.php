@@ -143,6 +143,7 @@ class BackupAccessRetentionTest extends TestCase
     {
         [$org, $owner, $oldRun, $connector, $policy, $oldArtifact, $store] = $this->verifiedBackup();
         $oldArtifact->update(['source_observed_at' => now('UTC')->subYear()]);
+        $this->travel(2)->seconds(); // Deterministic newer source instant, including fast Linux CI.
         $policy = app(BackupPolicies::class)->configure($org, $owner, $connector, [...$policy->configuration, 'retention' => ['daily' => 1, 'weekly' => 1, 'monthly' => 1]], true, 1);
         $next = app(BackupRuns::class)->enqueue($org, $owner, $policy, 2, 'retention-next-good');
         app(BackupRuns::class)->preflight($next->id);

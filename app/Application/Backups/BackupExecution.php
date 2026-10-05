@@ -4,6 +4,7 @@ namespace App\Application\Backups;
 
 use App\Infrastructure\Connectors\ConnectorFailure;
 use App\Infrastructure\Connectors\ConnectorReason;
+use App\Models\BackupRestoreDrill;
 use App\Models\BackupRun;
 use App\Models\HostingAccount;
 use App\Models\Organization;
@@ -33,7 +34,9 @@ class BackupExecution
             });
         })->lockForUpdate()->get(['id'])->count();
 
-        return $heavy < max(1, min(10, DB::table('backup_execution_controls')->where('id', 1)->value('maximum_parallel')));
+        $drills = BackupRestoreDrill::whereIn('state', ['running', 'unknown'])->lockForUpdate()->get(['id'])->count();
+
+        return $heavy + $drills < max(1, min(10, DB::table('backup_execution_controls')->where('id', 1)->value('maximum_parallel')));
     }
 
     public function claim(BackupRun $run, string $mode, string $state): string

@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Application\Backups\BackupArtifactAccess;
+use App\Application\Backups\BackupIssues;
 use App\Application\Backups\BackupRuns;
 use App\Application\Connectors\ConnectorAccess;
 use App\Application\IdentityAccess\OrganizationAuthorizationService;
 use App\Application\IdentityAccess\ProjectAccess;
 use App\Models\BackupArtifact;
+use App\Models\BackupInternalIncident;
 use App\Models\BackupPolicy;
+use App\Models\BackupRestoreDrill;
 use App\Models\BackupRetentionReport;
 use App\Models\BackupRun;
 use App\Models\Connector;
@@ -41,12 +44,31 @@ class BackupPageController extends Controller
                 } catch (HttpException|AuthorizationException) {
                     continue;
                 }
-                $artifacts = BackupArtifact::where('backup_run_id', $run->id)->get(['id', 'organization_id', 'hosting_account_id', 'backup_run_id', 'artifact_reference', 'state', 'verification_level', 'coverage_scopes', 'source_observed_at', 'verified_at', 'encrypted_bytes', 'fake', 'legal_hold', 'restore_pending', 'version']);
+                $artifacts = BackupArtifact::where('backup_run_id', $run->id)->get(['id', 'organization_id', 'hosting_account_id', 'backup_run_id', 'artifact_reference', 'state', 'verification_level', 'coverage_scopes', 'source_observed_at', 'verified_at', 'encrypted_bytes', 'fake', 'legal_hold', 'restore_pending', 'version', 'source_cleanup_state'])->map(function ($artifact) {
+                    $artifact->coverage_scopes ??= [];
+
+                    return $artifact;
+                });
                 $runs[] = [...$run->only(['id', 'run_reference', 'state', 'source_status', 'transfer_status', 'integrity_status', 'reason_code', 'completed_at', 'impacted_project_ids', 'fake']), 'artifacts' => $artifacts,
+                    'restore_drills' => BackupRestoreDrill::whereIn('backup_artifact_id', $artifacts->pluck('id'))->latest('id')->limit(20)->get(),
                     'can_download' => app(OrganizationAuthorizationService::class)->can($actor, $organization, 'backup.download') && app(BackupArtifactAccess::class)->protection($run)];
             }
             $connector = Connector::findOrFail($policy->connector_id);
-            $goods = DB::table('backup_scope_goods')->join('backup_artifacts', 'backup_artifacts.id', '=', 'backup_scope_goods.backup_artifact_id')->where('backup_scope_goods.hosting_account_id', $account->id)->get(['scope', 'backup_scope_goods.source_observed_at', 'verification_level']);
+            $issues = BackupInternalIncident::where('hosting_account_id', $account->id)->latest('id')->limit(50)->get()->filter(function ($issue) use ($organization, $actor): bool {
+                try {
+                    app(BackupIssues::class)->require($organization, $actor, $issue);
+
+                    return true;
+                } catch (HttpException|AuthorizationException) {
+                    return false;
+                }
+            })->map(function ($issue) {
+                $task = DB::table('backup_recovery_tasks')->where('backup_internal_incident_id', $issue->id)->first();
+                $task->due_at = CarbonImmutable::parse($task->due_at, 'UTC')->toIso8601String();
+
+                return [...$issue->toArray(), 'task' => $task];
+            })->values();
+            $goods = DB::table('backup_scope_goods')->join('backup_artifacts', 'backup_artifacts.id', '=', 'backup_scope_goods.backup_artifact_id')->where('backup_scope_goods.hosting_account_id', $account->id)->get(['scope', 'backup_scope_goods.source_observed_at', 'verification_level', 'backup_artifacts.state']);
             // Only expose goodness whose historical run remains visible, even after account usage changes.
             $goods = $goods->filter(function ($good) use ($organization, $actor, $account): bool {
                 $id = DB::table('backup_scope_goods')->where('hosting_account_id', $account->id)->where('scope', $good->scope)->value('backup_artifact_id');
@@ -65,13 +87,14 @@ class BackupPageController extends Controller
             $items[] = ['id' => $policy->id, 'version' => $policy->version, 'enabled' => $policy->enabled, 'account_id' => $account->id, 'connector_kind' => $connector->kind,
                 'validation_state' => $connector->validation_state, 'required_scopes' => $policy->configuration['required_scopes'], 'timezone' => $policy->configuration['timezone'],
                 'daily_at' => $policy->configuration['daily_at'], 'jitter_minutes' => $policy->configuration['jitter_minutes'], 'rpo_hours' => $policy->configuration['rpo_hours'],
-                'retention' => $policy->configuration['retention'], 'cleanup_temporary_source' => $policy->configuration['cleanup_temporary_source'] ?? false, 'last_goods' => $goods, 'runs' => $runs,
+                'retention' => $policy->configuration['retention'], 'cleanup_temporary_source' => $policy->configuration['cleanup_temporary_source'] ?? false, 'last_goods' => $goods, 'runs' => $runs, 'issues' => $issues,
                 'retention_reports' => app(ProjectAccess::class)->owner($actor, $organization) ? BackupRetentionReport::where('backup_policy_id', $policy->id)->latest('id')->limit(10)->get(['id', 'state', 'policy_version', 'results', 'expires_at']) : []];
         }
         $control = DB::table('backup_write_controls')->where('organization_id', $organization->id)->first();
         $data = ['organization' => $organization->only(['id', 'name']), 'items' => $items, 'isOwner' => app(ProjectAccess::class)->owner($actor, $organization),
             'canRun' => app(OrganizationAuthorizationService::class)->can($actor, $organization, 'backup.run'), 'control' => ['paused' => (bool) ($control?->paused ?? true), 'version' => $control?->version ?? 0],
             'liveEnabled' => (bool) config('opshub.live_connectors_enabled')];
+        $data['canRestore'] = app(OrganizationAuthorizationService::class)->can($actor, $organization, 'backup.restore_drill') && app(OrganizationAuthorizationService::class)->can($actor, $organization, 'backup.download');
 
         return $request->is('api/*') ? response()->json(['data' => $data]) : Inertia::render('Backups/Index', $data);
     }

@@ -52,6 +52,10 @@ class TelegramMessages
             $evidence = 'Connector: '.$this->clean($event->payload['reason_code'] ?? 'unknown').'; uptime website tidak disimpulkan dari hasil connector.';
             $next = 'Review assessment connector dan scope akses; write paused. Test reference pengganti sebelum switch; revoke reference lama secara manual di provider.';
         }
+        if ($event->event_type === 'backup.issue.opened') {
+            $evidence = 'Backup internal: '.$this->clean($event->payload['reason_code'] ?? 'BACKUP_INCOMPLETE').'; last-known-good tetap bertimestamp, uptime website tidak disimpulkan.';
+            $next = 'Review incident/task backup, scope yang belum terpenuhi dan RPO. Rekonsiliasi hasil unknown sebelum retry; restore hanya pada target terisolasi.';
+        }
         $text = ($fake ? "[FAKE TESTING]\n" : '').strtoupper($severity).' · '.$this->clean($event->event_type)."\nEvent: ".$event->event_id."\nProject: ".$projects->take(10)->map(fn ($p) => $this->clean($p->name))->implode(', ').($projects->count() > 10 ? ' +'.($projects->count() - 10).' proyek dalam scope' : '')."\nResource: ".$resource."\nWaktu: ".$when."\nEvidence: ".$this->clean($evidence)."\nAction owner: ".$owner."\nPIC: ".$projects->take(10)->map(fn ($p) => $p->internal_pic_user_id ? 'user #'.$p->internal_pic_user_id : 'belum ditugaskan')->unique()->implode(', ')."\nTindakan: ".$next."\nDashboard: ".$link;
         if ($followup?->next_followup_at) {
             $text .= "\nDeadline: ".$followup->next_followup_at->setTimezone('Asia/Jakarta')->format('d-m-Y H:i').' WIB';
@@ -102,7 +106,7 @@ class TelegramMessages
         if (strlen($base) > 255 || ! isset($p['scheme'], $p['host']) || isset($p['user']) || isset($p['pass']) || isset($p['query']) || isset($p['fragment']) || ! in_array($p['scheme'], ['http', 'https'], true) || (! app()->environment(['local', 'testing']) && $p['scheme'] !== 'https')) {
             throw new LogicException('Authenticated dashboard URL is not configured safely.');
         }
-        $path = $event && isset($event->payload['followup_id']) ? '/follow-ups/'.$event->payload['followup_id'] : ($event?->aggregate_type === 'incident' ? '/incidents/'.$event->aggregate_id : ($event?->aggregate_type === 'connector' ? '/notifications' : '/renewals'));
+        $path = $event && isset($event->payload['followup_id']) ? '/follow-ups/'.$event->payload['followup_id'] : ($event?->aggregate_type === 'incident' ? '/incidents/'.$event->aggregate_id : ($event?->aggregate_type === 'connector' ? '/notifications' : ($event?->aggregate_type === 'backup_internal_incident' ? '/backups' : '/renewals')));
 
         return $base.'/organizations/'.$org->id.$path;
     }

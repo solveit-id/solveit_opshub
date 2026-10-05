@@ -5,6 +5,7 @@ namespace App\Application\TelegramNotifications;
 use App\Application\ClientTemplates\DraftGenerator;
 use App\Application\RenewalFollowups\Expiry;
 use App\Application\RenewalFollowups\RenewalAccess;
+use App\Models\BackupInternalIncident;
 use App\Models\ClientFollowup;
 use App\Models\Incident;
 use App\Models\IncidentNotificationHistory;
@@ -28,6 +29,12 @@ class DeliveryReconciler
         }
         if ($d->notification_kind === 'coalesced') {
             return $this->batch($d, $org, $now);
+        }
+        if ($event->aggregate_type === 'backup_internal_incident') {
+            $issue = BackupInternalIncident::forOrganization($org)->find($event->aggregate_id);
+            if (! $issue || $issue->state !== 'open') {
+                return $this->stop($d, 'superseded', 'BACKUP_ISSUE_RESOLVED');
+            }
         }
         if ($d->notification_kind === 'digest') {
             $snapshot = app(TelegramDigest::class)->current($org, $bot, TelegramDestination::findOrFail($d->telegram_destination_id), $event, $d->event_ids ?? [], $now);

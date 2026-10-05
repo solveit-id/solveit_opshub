@@ -4,6 +4,7 @@ use App\Application\RenewalFollowups\FollowupWorkflow;
 use App\Http\Controllers\BackupArtifactController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupPageController;
+use App\Http\Controllers\BackupRestoreController;
 use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\ConnectorController;
 use App\Http\Controllers\FollowupController;
@@ -27,6 +28,10 @@ Route::middleware('web')->group(function (): void {
         ->prefix('/v1/organizations/{organization}')->group(function (): void {
             Route::get('/backups', [BackupPageController::class, 'index']);
             Route::middleware('step-up')->group(function (): void {
+                Route::post('/backup-artifacts/{artifact}/restore-drills', [BackupRestoreController::class, 'enqueue']);
+                Route::post('/backup-restore-drills/{drill}/reconcile', [BackupRestoreController::class, 'reconcile']);
+                Route::post('/backup-restore-drills/{drill}/manual-record', [BackupRestoreController::class, 'manual']);
+                Route::post('/backup-issues/{issue}/resolve', [BackupRestoreController::class, 'resolve']);
                 Route::post('/backup-artifacts/{artifact}/download-link', [BackupArtifactController::class, 'issue']);
                 Route::post('/backup-artifacts/{artifact}/hold', [BackupArtifactController::class, 'hold']);
                 Route::post('/backup-artifacts/{artifact}/reconcile-deletion', [BackupArtifactController::class, 'reconcile']);

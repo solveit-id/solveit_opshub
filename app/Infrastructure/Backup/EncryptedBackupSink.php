@@ -9,6 +9,7 @@ use App\Infrastructure\Connectors\ConnectorReason;
 use App\Models\BackupArtifact;
 use App\Models\BackupPolicy;
 use App\Models\BackupRun;
+use App\Models\BackupSourceOperation;
 use App\Models\Connector;
 use App\Models\HostingAccount;
 use Illuminate\Support\Str;
@@ -54,12 +55,12 @@ class EncryptedBackupSink implements BackupSink
                     'backup_run_id' => $current->id, 'artifact_reference' => (string) Str::uuid(), 'environment_ids' => HostingAccount::findOrFail($current->hosting_account_id)->asset->usages()->pluck('environment_id')->unique()->sort()->values()->all(),
                     'source_kind' => Connector::findOrFail(BackupPolicy::findOrFail($current->backup_policy_id)->connector_id)->kind,
                     'object_reference' => 'store:'.Str::uuid(), 'object_version' => (string) Str::uuid(), 'key_reference' => $reference,
-                    'fake' => $current->fake, 'source_observed_at' => now('UTC')]);
+                    'fake' => $current->fake, 'source_observed_at' => BackupSourceOperation::where('backup_run_id', $current->id)->first()?->started_at ?? now('UTC')]);
             });
             $result = null;
             $metadata = $this->store->put($run, $artifact->object_reference, $artifact->object_version, function (\Closure $consume) use ($artifact, $run, $producer, &$result, $key): void {
                 $boundProducer = function (\Closure $consumer) use ($artifact, $run, $producer): array {
-                    return [...$producer($consumer), 'run_reference' => $run->run_reference, 'source_kind' => $artifact->source_kind, 'environment_ids' => $artifact->environment_ids];
+                    return [...$producer($consumer), 'run_reference' => $run->run_reference, 'source_kind' => $artifact->source_kind, 'environment_ids' => $artifact->environment_ids, 'capture_origin_utc' => $artifact->source_observed_at->toIso8601String()];
                 };
                 $result = $this->cipher->seal($key, $artifact->context(), $boundProducer, $consume);
             });

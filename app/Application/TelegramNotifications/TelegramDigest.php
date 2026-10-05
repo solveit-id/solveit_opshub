@@ -4,6 +4,7 @@ namespace App\Application\TelegramNotifications;
 
 use App\Application\RenewalFollowups\Expiry;
 use App\Application\RenewalFollowups\RenewalAccess;
+use App\Models\BackupInternalIncident;
 use App\Models\ClientFollowup;
 use App\Models\Incident;
 use App\Models\Organization;
@@ -69,12 +70,13 @@ class TelegramDigest
         }
 
         foreach (OutboxEvent::forOrganization($org)->whereIn('id', $heldIds)->get() as $quietEvent) {
-            $state = $quietEvent->aggregate_type === 'incident' ? Incident::forOrganization($org)->find($quietEvent->aggregate_id)?->state : 'review dashboard';
+            $state = $quietEvent->aggregate_type === 'incident' ? Incident::forOrganization($org)->find($quietEvent->aggregate_id)?->state : ($quietEvent->aggregate_type === 'backup_internal_incident' ? BackupInternalIncident::forOrganization($org)->find($quietEvent->aggregate_id)?->state : 'review dashboard');
             $items[] = ['rank' => 6, 'text' => 'QUIET event '.$quietEvent->event_id.' · '.app(TelegramMessages::class)->clean($quietEvent->event_type).' · CURRENT '.$state];
         }
         $items = collect($items)->sortBy('rank')->values();
         $shownDown = $items->take(10)->pluck('incident_id')->filter()->values()->all();
-        $text = ($bot->identity_fake ? "[FAKE TESTING]\n" : '').'DIGEST '.$event->payload['local_date']."\nEvent: ".$event->event_id."\nScope: ".app(TelegramMessages::class)->clean($dest->label)."\nWaktu: ".$now->setTimezone('Asia/Jakarta')->format('d-m-Y H:i')." WIB\nTotal prioritas: ".$items->count().' · quiet events: '.count($heldIds)."\n".$items->take(10)->pluck('text')->implode("\n")."\nBackup/maintenance: unsupported pada M2; coverage tidak diklaim sehat.\nAction owner/PIC: tinjau assignment per item di dashboard.\nTindakan: dahulukan critical, overdue, renewal dan verification gaps.\nMonitoring: ".rtrim(config('app.url'), '/').'/organizations/'.$org->id.'/overview'."\nRenewal: ".app(TelegramMessages::class)->link($org);
+        $backupCount = BackupInternalIncident::forOrganization($org)->where('state', 'open')->get()->filter(fn ($issue) => array_intersect($scope, $issue->impacted_project_ids) !== [])->count();
+        $text = ($bot->identity_fake ? "[FAKE TESTING]\n" : '').'DIGEST '.$event->payload['local_date']."\nEvent: ".$event->event_id."\nScope: ".app(TelegramMessages::class)->clean($dest->label)."\nWaktu: ".$now->setTimezone('Asia/Jakarta')->format('d-m-Y H:i')." WIB\nTotal prioritas: ".$items->count().' · quiet events: '.count($heldIds)."\n".$items->take(10)->pluck('text')->implode("\n")."\nBackup internal open: ".$backupCount."; lihat dated evidence/scope/RPO, bukan uptime website. Maintenance workflow unsupported.\nAction owner/PIC: tinjau assignment per item di dashboard.\nTindakan: dahulukan critical, overdue, renewal dan verification gaps.\nMonitoring: ".rtrim(config('app.url'), '/').'/organizations/'.$org->id.'/overview'."\nBackup: ".rtrim(config('app.url'), '/').'/organizations/'.$org->id.'/backups'."\nRenewal: ".app(TelegramMessages::class)->link($org);
 
         return ['parts' => app(TelegramMessages::class)->segment($text), 'down_ids' => $shownDown, 'scope' => $scope];
     }

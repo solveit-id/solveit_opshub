@@ -3,13 +3,15 @@ import { Head, Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { useState } from 'react';
 
-type Artifact = { id: number; version: number; state: string; verification_level: string; coverage_scopes: string[]; source_observed_at: string; verified_at: string | null; legal_hold: boolean; restore_pending: boolean; encrypted_bytes: number };
-type Run = { id: number; run_reference: string; state: string; source_status: string; transfer_status: string; integrity_status: string; reason_code: string | null; fake: boolean; can_download: boolean; impacted_project_ids: number[]; artifacts: Artifact[] };
+type Artifact = { id: number; version: number; state: string; verification_level: string; coverage_scopes: string[]; source_observed_at: string; verified_at: string | null; legal_hold: boolean; restore_pending: boolean; encrypted_bytes: number; source_cleanup_state: string };
+type Drill = { id: number; version: number; backup_artifact_id: number; state: string; reason_code: string | null; runbook: string; target_kind: string; operator_user_id: number; completed_at: string | null; fake: boolean; checks: { files_restored?: boolean; file_hashes_match?: boolean; file_count?: number; database_restored?: boolean } | null; evidence_reference: string | null };
+type Run = { id: number; run_reference: string; state: string; source_status: string; transfer_status: string; integrity_status: string; reason_code: string | null; fake: boolean; can_download: boolean; impacted_project_ids: number[]; artifacts: Artifact[]; restore_drills: Drill[] };
 type Policy = { id: number; version: number; enabled: boolean; account_id: number; connector_kind: string; validation_state: string; required_scopes: string[]; timezone: string; daily_at: string; jitter_minutes: number; rpo_hours: number; retention: { daily: number; weekly: number; monthly: number }; cleanup_temporary_source: boolean; last_goods: { scope: string; source_observed_at: string; verification_level: string }[]; runs: Run[]; retention_reports: { id: number; state: string; results: { artifact_id: number; state: string }[] | null }[] };
+type Issue = { id: number; version: number; kind: string; scope: string | null; reason_code: string; state: string; task: { id: number; state: string; assignee_user_id: number | null; due_at: string } };
 type Report = { id: number; decisions: { artifact_id: number; decision: string; reasons: string[]; tiers: string[] }[] };
 const date = (value: string | null) => value ? new Date(value).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) + ' WIB' : 'Belum terbukti';
 
-export default function Backups({ organization, items, isOwner, canRun, control, liveEnabled }: { organization: { id: number; name: string }; items: Policy[]; isOwner: boolean; canRun: boolean; control: { paused: boolean; version: number }; liveEnabled: boolean }) {
+export default function Backups({ organization, items, isOwner, canRun, canRestore, control, liveEnabled }: { organization: { id: number; name: string }; items: (Policy & { issues: Issue[] })[]; isOwner: boolean; canRun: boolean; canRestore: boolean; control: { paused: boolean; version: number }; liveEnabled: boolean }) {
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
     const [report, setReport] = useState<Report | null>(null);
@@ -34,6 +36,7 @@ export default function Backups({ organization, items, isOwner, canRun, control,
             <section className="rounded bg-white p-4 shadow space-y-3" aria-label="Status backup">
                 <p>Write: <strong>{control.paused ? 'PAUSED' : 'diizinkan policy'}</strong> · Live connector: <strong>{liveEnabled ? 'enabled' : 'false'}</strong></p>
                 <p className="text-sm text-gray-600">Acceptance API/source archive belum berarti backup terlindungi. Integrity, scope, dan restore ditampilkan sesuai bukti. SFTP file-only tidak membuktikan backup database.</p>
+                <p className="text-sm">Restore hanya target terisolasi yang diotorisasi. Full cPanel tanpa capability mengikuti <a className="text-indigo-700 underline" href="https://github.com/solveit-id/solveit_opshub/blob/main/docs/CHECKPOINT.md#runbook-restore-drill-m3" target="_blank" rel="noreferrer">runbook provider/manual</a>. Record manual tetap live-unverified sampai evidence target divalidasi.</p>
                 <div className="flex flex-wrap gap-2"><Link className={button} href={route('password.confirm')}>Konfirmasi akses</Link><button className={button} onClick={() => router.reload()}>Muat ulang status</button>
                     {isOwner && <button disabled={busy} className={button} onClick={() => action('/backup-write-control', { paused: !control.paused, version: control.version })}>{control.paused ? 'Izinkan write sesuai policy' : 'Pause seluruh write backup'}</button>}
                 </div>
@@ -44,7 +47,7 @@ export default function Backups({ organization, items, isOwner, canRun, control,
             {items.map(policy => <section key={policy.id} className="rounded bg-white p-4 shadow space-y-4" aria-label={`Backup akun ${policy.account_id}`}>
                 <h2 className="font-semibold">Akun #{policy.account_id} · {policy.connector_kind} · {policy.validation_state}</h2>
                 <p className="text-sm">Policy v{policy.version} {policy.enabled ? 'aktif' : 'disabled'} · required: {policy.required_scopes.join(', ')} · {policy.daily_at} {policy.timezone} + jitter 0–{policy.jitter_minutes} menit · RPO {policy.rpo_hours} jam.</p>
-                <div className="space-y-1 text-sm">{policy.required_scopes.map(scope => { const good = policy.last_goods.find(g => g.scope === scope); return <p key={scope}>{scope}: last-known-good {date(good?.source_observed_at ?? null)} · {good?.verification_level ?? 'coverage gap'}</p>; })}</div>
+                <div className="space-y-1 text-sm">{policy.required_scopes.map(scope => { const good = policy.last_goods.find(g => g.scope === scope); return <p key={scope}>{scope}: last-known-good {date(good?.source_observed_at ?? null)} · {good?.verification_level ?? 'coverage gap'} · artifact state {good && 'state' in good ? String(good.state) : 'belum terbukti'}</p>; })}</div>
                 <div className="flex flex-wrap gap-2">
                     {canRun && <button className={button} disabled={busy || control.paused || !policy.enabled} onClick={() => action(`/backup-policies/${policy.id}/runs`, { version: policy.version })}>Antrekan backup</button>}
                     {isOwner && <button className={button} disabled={busy} onClick={() => action(`/backup-policies/${policy.id}/retention-preview`, {}, 'preview')}>Dry-run retention</button>}
@@ -56,6 +59,11 @@ export default function Backups({ organization, items, isOwner, canRun, control,
                 </form>}
                 <p className="text-sm text-gray-600">Cleanup menjaga last-known-good, legal hold, restore pending dan download aktif. Native source cleanup memerlukan proof kepemilikan teruji; SFTP tetap read-only.</p>
                 {policy.retention_reports.map(result => <p className="text-sm" key={result.id}>Retention #{result.id}: {result.state} · {result.results?.map(row => `artifact #${row.artifact_id}: ${row.state}`).join('; ') ?? 'menunggu hasil worker'}</p>)}
+                {policy.issues.map(issue => <article className="rounded border border-amber-200 bg-amber-50 p-3 text-sm space-y-2" key={issue.id}>
+                    <h3 className="font-medium">Incident internal backup #{issue.id} · {issue.kind} {issue.scope} · {issue.state}</h3>
+                    <p>{issue.reason_code} · recovery task #{issue.task.id}: {issue.task.state} · assignee {issue.task.assignee_user_id ? `user #${issue.task.assignee_user_id}` : 'belum ditugaskan'} · due {date(issue.task.due_at)}</p>
+                    {canRun && issue.state === 'open' && <form className="flex flex-wrap gap-2" onSubmit={event => { event.preventDefault(); const form = new FormData(event.currentTarget); action(`/backup-issues/${issue.id}/resolve`, { version: issue.version, evidence_reference: form.get('evidence') }); }}><label>Evidence resolution<input className="ml-2 rounded border-gray-300" name="evidence" placeholder="evidence:reference" required maxLength={128} /></label><button className={button} disabled={busy}>Resolve setelah review</button></form>}
+                </article>)}
                 {policy.runs.map(run => <article key={run.id} className="border-t pt-3 space-y-2">
                     <h3 className="font-medium">Run #{run.id} · {run.state} {run.fake && '· fake/testing'}</h3>
                     <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3"><div><dt>Source</dt><dd>{run.source_status}</dd></div><div><dt>Independent storage</dt><dd>{run.transfer_status}</dd></div><div><dt>Integrity</dt><dd>{run.integrity_status}</dd></div></dl>
@@ -65,12 +73,26 @@ export default function Backups({ organization, items, isOwner, canRun, control,
                         <p>Artifact #{artifact.id}: {artifact.state} · {artifact.verification_level} · scope {artifact.coverage_scopes.join(', ')} · {artifact.encrypted_bytes.toLocaleString('id-ID')} bytes encrypted</p>
                         <p>Source {date(artifact.source_observed_at)} · verified {date(artifact.verified_at)} · restore {artifact.verification_level === 'restore_verified' ? 'verified' : 'belum diuji'}</p>
                         <p>Legal hold {artifact.legal_hold ? 'ya' : 'tidak'} · restore pending {artifact.restore_pending ? 'ya' : 'tidak'}</p>
+                        <p>Temporary source cleanup: {artifact.source_cleanup_state}</p>
                         <div className="flex flex-wrap gap-2">
                             {run.can_download && artifact.state === 'verified' && <button disabled={busy} className={button} onClick={() => action(`/backup-artifacts/${artifact.id}/download-link`, {}, 'download')}>Buat link 5 menit</button>}
                             {isOwner && artifact.state === 'verified' && <button disabled={busy} className={button} onClick={() => action(`/backup-artifacts/${artifact.id}/hold`, { version: artifact.version, legal_hold: !artifact.legal_hold })}>{artifact.legal_hold ? 'Lepas legal hold' : 'Pasang legal hold'}</button>}
                             {isOwner && ['deleting', 'delete_unknown'].includes(artifact.state) && <button disabled={busy} className={button} onClick={() => action(`/backup-artifacts/${artifact.id}/reconcile-deletion`, { version: artifact.version })}>Rekonsiliasi deletion</button>}
                             {isOwner && policy.cleanup_temporary_source && policy.connector_kind === 'cpanel' && artifact.state === 'verified' && <button disabled={busy || control.paused} className={button} onClick={() => action(`/backup-artifacts/${artifact.id}/cleanup-source`)}>Cleanup own source</button>}
                         </div>
+                        {canRestore && (run.can_download || policy.connector_kind === 'cpanel') && artifact.state === 'verified' && !artifact.restore_pending && <form className="flex flex-wrap gap-2" onSubmit={event => { event.preventDefault(); const form = new FormData(event.currentTarget); action(`/backup-artifacts/${artifact.id}/restore-drills`, { target_kind: 'isolated', target_reference: form.get('target') }); }}>
+                            <label>Target isolated reference<input className="ml-2 rounded border-gray-300" name="target" placeholder="isolated:authorized-target" required maxLength={128} /></label><button disabled={busy || control.paused} className={button}>{policy.connector_kind === 'cpanel' ? 'Catat rencana provider/manual' : 'Antrekan isolated file drill'}</button>
+                        </form>}
+                        {run.restore_drills.filter(drill => drill.backup_artifact_id === artifact.id).map(drill => <div className="border-t pt-2 space-y-2" key={drill.id}>
+                            <p>Restore drill #{drill.id}: {drill.state} {drill.fake && '· fake/testing'} · target {drill.target_kind} · operator #{drill.operator_user_id} · {date(drill.completed_at)}</p>
+                            <p>Runbook {drill.runbook} · {drill.reason_code} · evidence {drill.evidence_reference ?? 'belum tersedia'}. {drill.checks?.files_restored ? `${drill.checks.file_count} file dipulihkan; hash ${drill.checks.file_hashes_match ? 'cocok' : 'belum terbukti'}.` : 'Checks belum terverifikasi.'}</p>
+                            {canRestore && ['unknown', 'running'].includes(drill.state) && <button disabled={busy} className={button} onClick={() => action(`/backup-restore-drills/${drill.id}/reconcile`, { version: drill.version })}>Rekonsiliasi isolated workspace</button>}
+                            {canRestore && drill.state === 'manual_required' && <form className="space-y-2" onSubmit={event => { event.preventDefault(); const form = new FormData(event.currentTarget); action(`/backup-restore-drills/${drill.id}/manual-record`, { version: drill.version, evidence_reference: form.get('evidence'), checks: { target_isolated: form.get('isolated') === 'on', production_overwrite: false, files_passed: form.get('files') === 'on', database_passed: form.get('database') === 'on' } }); }}>
+                                <label className="block"><input name="isolated" type="checkbox" required /> Saya mencatat pemeriksaan manual pada target terisolasi, tanpa production overwrite.</label>
+                                <label className="mr-3"><input name="files" type="checkbox" /> Files checks pass</label><label><input name="database" type="checkbox" /> Database checks pass</label>
+                                <label className="block">Evidence reference <input className="rounded border-gray-300" name="evidence" placeholder="evidence:reference" maxLength={128} required /></label><button disabled={busy} className={button}>Catat manual/live-unverified</button>
+                            </form>}
+                        </div>)}
                     </div>)}
                 </article>)}
             </section>)}

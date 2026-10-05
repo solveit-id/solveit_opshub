@@ -26,7 +26,7 @@ class SftpBundleInspection
 
     private string $digest = '';
 
-    public function __construct(private int $maximumBytes) {}
+    public function __construct(private int $maximumBytes, private ?RestoreTarget $target = null) {}
 
     public function accept(string $chunk): void
     {
@@ -88,6 +88,7 @@ class SftpBundleInspection
                     $this->fail();
                 }
                 $this->hash = hash_init('sha256');
+                $this->target?->entry($this->entry);
                 $this->phase = 'body';
             } elseif ($this->phase === 'body') {
                 if ($this->remaining > 0) {
@@ -95,7 +96,9 @@ class SftpBundleInspection
                         return;
                     }
                     $length = min($this->remaining, strlen($this->buffer));
-                    hash_update($this->hash, $this->take($length));
+                    $body = $this->take($length);
+                    hash_update($this->hash, $body);
+                    $this->target?->write($body);
                     $this->remaining -= $length;
                 }
                 if ($this->remaining === 0) {
@@ -110,6 +113,7 @@ class SftpBundleInspection
                     $this->fail();
                 }
                 $this->files[] = [...$this->entry, 'sha256' => bin2hex($this->digest), 'status' => 'read'];
+                $this->target?->endEntry(end($this->files));
                 $this->phase = 'header';
             }
         }
